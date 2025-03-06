@@ -89,7 +89,7 @@ const Agents = () => {
       email: newAgent.email,
       phone: newAgent.phone,
       region: newAgent.region,
-      status: newAgent.status as 'active' | 'inactive',
+      status: newAgent.status as 'active' | 'inactive', // This line had the error
       contractsCount: 0,
       joinDate: new Date().toISOString().split('T')[0],
     };
@@ -181,7 +181,7 @@ const Agents = () => {
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={newAgent.status}
-                  onValueChange={(value) => setNewAgent({ ...newAgent, status: value })}
+                  onValueChange={(value: 'active' | 'inactive') => setNewAgent({ ...newAgent, status: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />

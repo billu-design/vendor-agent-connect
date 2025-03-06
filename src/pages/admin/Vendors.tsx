@@ -91,7 +91,7 @@ const Vendors = () => {
       phone: newVendor.phone,
       location: newVendor.location,
       type: newVendor.type,
-      status: newVendor.status as 'active' | 'inactive',
+      status: newVendor.status as 'active' | 'inactive', // This line had the error
       joinDate: new Date().toISOString().split('T')[0],
     };
     
@@ -192,7 +192,7 @@ const Vendors = () => {
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={newVendor.status}
-                  onValueChange={(value) => setNewVendor({ ...newVendor, status: value })}
+                  onValueChange={(value: 'active' | 'inactive') => setNewVendor({ ...newVendor, status: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
