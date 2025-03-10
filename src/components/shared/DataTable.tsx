@@ -5,16 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 import { Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
-
-interface Column {
-  key?: string;
-  accessorKey?: string;
-  header: string;
-  render?: (value: any, record: any) => React.ReactNode;
-  sortable?: boolean;
-  cell?: ({ row }: { row: { original: any } }) => React.ReactNode;
-  id?: string;
-}
+import { Column } from "@/types";
 
 interface DataTableProps {
   columns: Column[];
@@ -71,6 +62,17 @@ export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: 
     return sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   };
   
+  // Get the accessor key for a column (either key or accessorKey)
+  const getColumnKey = (column: Column): string => {
+    return column.key || column.accessorKey || column.id || "";
+  };
+  
+  // Get the value from a record based on column configuration
+  const getCellValue = (record: any, column: Column) => {
+    const key = getColumnKey(column);
+    return record[key];
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -91,13 +93,13 @@ export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: 
             <TableRow>
               {columns.map((column) => (
                 <TableHead 
-                  key={column.key || column.accessorKey || column.id}
-                  onClick={() => column.sortable && handleSort(column.key || column.accessorKey || "")}
+                  key={getColumnKey(column) || columns.indexOf(column).toString()}
+                  onClick={() => column.sortable && handleSort(getColumnKey(column))}
                   className={column.sortable ? "cursor-pointer hover:text-primary" : ""}
                 >
                   <div className="flex items-center">
                     {column.header}
-                    {column.sortable && renderSortIcon(column.key || column.accessorKey || "")}
+                    {column.sortable && renderSortIcon(getColumnKey(column))}
                   </div>
                 </TableHead>
               ))}
@@ -114,16 +116,16 @@ export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: 
             ) : (
               paginatedData.map((record, index) => (
                 <TableRow key={record.id || index} className="group hover:bg-muted/50">
-                  {columns.map((column) => (
-                    <TableCell key={`${record.id || index}-${column.key || column.accessorKey || column.id || index}`}>
+                  {columns.map((column, colIndex) => (
+                    <TableCell key={`${record.id || index}-${getColumnKey(column) || colIndex}`}>
                       {column.cell ? (
                         column.cell({ row: { original: record } })
                       ) : column.render ? (
-                        column.render(record[column.key || column.accessorKey || ""], record)
-                      ) : column.key === "status" || column.accessorKey === "status" ? (
-                        <StatusBadge status={record[column.key || column.accessorKey || ""]} />
+                        column.render(getCellValue(record, column), record)
+                      ) : isStatusColumn(column) ? (
+                        <StatusBadge status={getCellValue(record, column)} />
                       ) : (
-                        record[column.key || column.accessorKey || ""]
+                        getCellValue(record, column)
                       )}
                     </TableCell>
                   ))}
@@ -162,4 +164,9 @@ export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: 
       )}
     </div>
   );
+}
+
+// Helper function to determine if a column is a status column
+function isStatusColumn(column: Column): boolean {
+  return column.key === "status" || column.accessorKey === "status";
 }

@@ -4,14 +4,14 @@ import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Vendor } from "@/types";
+import { Vendor, Column } from "@/types";
 import { sampleVendors } from "@/data/sampleData";
 import { Search, Plus, Building2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Define columns for the vendors table
-const columns = [
+const columns: Column[] = [
   {
     accessorKey: "name",
     header: "Name",
@@ -54,6 +54,7 @@ const columns = [
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }: { row: { original: Vendor } }) => (
       <div className="flex justify-end">
         <Button variant="outline" size="sm">

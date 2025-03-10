@@ -1,8 +1,9 @@
 
 import { formatDate } from '@/lib/utils';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { Column } from '@/types';
 
-export const VendorColumns = [
+export const VendorColumns: Column[] = [
   {
     key: 'name',
     header: 'Name',

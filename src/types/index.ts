@@ -57,7 +57,7 @@ export interface AuthContextType {
 export interface Column {
   key?: string;
   accessorKey?: string;
-  header: string;
+  header?: string;
   render?: (value: any, record: any) => React.ReactNode;
   sortable?: boolean;
   cell?: ({ row }: { row: { original: any } }) => React.ReactNode;

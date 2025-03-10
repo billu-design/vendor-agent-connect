@@ -4,14 +4,14 @@ import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Contract } from "@/types";
+import { Contract, Column } from "@/types";
 import { sampleContracts } from "@/data/sampleData";
 import { Search, Plus, FileText, Download } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
 
 // Define columns for the contracts table
-const columns = [
+const columns: Column[] = [
   {
     accessorKey: "title",
     header: "Contract",
@@ -74,6 +74,7 @@ const columns = [
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }: { row: { original: Contract } }) => (
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm">
