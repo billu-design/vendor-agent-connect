@@ -19,6 +19,8 @@ import AgentVendors from "./pages/agent/vendors";
 import AgentMessages from "./pages/agent/messages";
 import AdminContracts from "./pages/admin/contracts";
 import AdminReports from "./pages/admin/reports";
+import EditAgent from "./pages/admin/agents/edit/[id]";
+import EditVendor from "./pages/admin/vendors/edit/[id]";
 
 const queryClient = new QueryClient();
 
@@ -39,9 +41,9 @@ const App = () => (
             
             {/* Admin routes */}
             <Route path="/admin/agents" element={<Agents />} />
-            <Route path="/admin/agents/edit/:id" element={<NotFound />} />
+            <Route path="/admin/agents/edit/:id" element={<EditAgent />} />
             <Route path="/admin/vendors" element={<Vendors />} />
-            <Route path="/admin/vendors/edit/:id" element={<NotFound />} />
+            <Route path="/admin/vendors/edit/:id" element={<EditVendor />} />
             <Route path="/admin/contracts" element={<AdminContracts />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             
