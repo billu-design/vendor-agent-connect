@@ -10,9 +10,10 @@ import { useNavigate } from "react-router-dom";
 interface ContractCardProps {
   contract: Contract;
   onSendEmail?: (contract: Contract) => void;
+  isLoading?: boolean;
 }
 
-export function ContractCard({ contract, onSendEmail }: ContractCardProps) {
+export function ContractCard({ contract, onSendEmail, isLoading }: ContractCardProps) {
   const navigate = useNavigate();
   
   return (
@@ -61,8 +62,9 @@ export function ContractCard({ contract, onSendEmail }: ContractCardProps) {
             size="sm"
             className="flex-1"
             onClick={() => onSendEmail(contract)}
+            disabled={isLoading}
           >
-            <Mail className="h-4 w-4 mr-1" /> Send
+            <Mail className="h-4 w-4 mr-1" /> {isLoading ? 'Sending...' : 'Send'}
           </Button>
         )}
         {contract.status === 'draft' && (

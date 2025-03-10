@@ -53,3 +53,13 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
+
+export interface Column {
+  key?: string;
+  accessorKey?: string;
+  header: string;
+  render?: (value: any, record: any) => React.ReactNode;
+  sortable?: boolean;
+  cell?: ({ row }: { row: { original: any } }) => React.ReactNode;
+  id?: string;
+}

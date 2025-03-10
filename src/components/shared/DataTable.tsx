@@ -7,10 +7,13 @@ import { StatusBadge } from "./StatusBadge";
 import { Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Column {
-  key: string;
+  key?: string;
+  accessorKey?: string;
   header: string;
   render?: (value: any, record: any) => React.ReactNode;
   sortable?: boolean;
+  cell?: ({ row }: { row: { original: any } }) => React.ReactNode;
+  id?: string;
 }
 
 interface DataTableProps {
@@ -18,9 +21,10 @@ interface DataTableProps {
   data: any[];
   actions?: (record: any) => React.ReactNode;
   pageSize?: number;
+  searchKey?: string;
 }
 
-export function DataTable({ columns, data, actions, pageSize = 10 }: DataTableProps) {
+export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -87,13 +91,13 @@ export function DataTable({ columns, data, actions, pageSize = 10 }: DataTablePr
             <TableRow>
               {columns.map((column) => (
                 <TableHead 
-                  key={column.key}
-                  onClick={() => column.sortable && handleSort(column.key)}
+                  key={column.key || column.accessorKey || column.id}
+                  onClick={() => column.sortable && handleSort(column.key || column.accessorKey || "")}
                   className={column.sortable ? "cursor-pointer hover:text-primary" : ""}
                 >
                   <div className="flex items-center">
                     {column.header}
-                    {column.sortable && renderSortIcon(column.key)}
+                    {column.sortable && renderSortIcon(column.key || column.accessorKey || "")}
                   </div>
                 </TableHead>
               ))}
@@ -111,13 +115,15 @@ export function DataTable({ columns, data, actions, pageSize = 10 }: DataTablePr
               paginatedData.map((record, index) => (
                 <TableRow key={record.id || index} className="group hover:bg-muted/50">
                   {columns.map((column) => (
-                    <TableCell key={`${record.id || index}-${column.key}`}>
-                      {column.render ? (
-                        column.render(record[column.key], record)
-                      ) : column.key === "status" ? (
-                        <StatusBadge status={record[column.key]} />
+                    <TableCell key={`${record.id || index}-${column.key || column.accessorKey || column.id || index}`}>
+                      {column.cell ? (
+                        column.cell({ row: { original: record } })
+                      ) : column.render ? (
+                        column.render(record[column.key || column.accessorKey || ""], record)
+                      ) : column.key === "status" || column.accessorKey === "status" ? (
+                        <StatusBadge status={record[column.key || column.accessorKey || ""]} />
                       ) : (
-                        record[column.key]
+                        record[column.key || column.accessorKey || ""]
                       )}
                     </TableCell>
                   ))}
