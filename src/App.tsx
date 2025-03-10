@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import AgentContracts from "./pages/agent/contracts";
+import NewContract from "./pages/agent/contracts/new";
 import AgentVendors from "./pages/agent/vendors";
 import AgentMessages from "./pages/agent/messages";
 import AdminContracts from "./pages/admin/contracts";
@@ -49,7 +50,7 @@ const App = () => (
             
             {/* Agent routes */}
             <Route path="/agent/contracts" element={<AgentContracts />} />
-            <Route path="/agent/contracts/new" element={<AgentContracts />} />
+            <Route path="/agent/contracts/new" element={<NewContract />} />
             <Route path="/agent/vendors" element={<AgentVendors />} />
             <Route path="/agent/messages" element={<AgentMessages />} />
             
