@@ -63,3 +63,9 @@ export interface Column {
   cell?: ({ row }: { row: { original: any } }) => React.ReactNode;
   id?: string;
 }
+
+export interface ContractCardProps {
+  contract: Contract;
+  onSendEmail?: () => Promise<void>;
+  isLoading?: boolean;
+}

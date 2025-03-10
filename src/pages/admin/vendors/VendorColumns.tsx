@@ -5,37 +5,37 @@ import { Column } from '@/types';
 
 export const VendorColumns: Column[] = [
   {
-    key: 'name',
+    accessorKey: 'name',
     header: 'Name',
     sortable: true,
   },
   {
-    key: 'email',
+    accessorKey: 'email',
     header: 'Email',
     sortable: true,
   },
   {
-    key: 'phone',
+    accessorKey: 'phone',
     header: 'Phone',
   },
   {
-    key: 'type',
+    accessorKey: 'type',
     header: 'Type',
     sortable: true,
   },
   {
-    key: 'location',
+    accessorKey: 'location',
     header: 'Location',
     sortable: true,
   },
   {
-    key: 'status',
+    accessorKey: 'status',
     header: 'Status',
     render: (value: string) => <StatusBadge status={value} />,
     sortable: true,
   },
   {
-    key: 'joinDate',
+    accessorKey: 'joinDate',
     header: 'Join Date',
     render: (value: string) => formatDate(value),
     sortable: true,
