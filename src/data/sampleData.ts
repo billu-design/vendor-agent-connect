@@ -1,4 +1,3 @@
-
 import { Agent, Contract, User, Vendor } from '@/types';
 
 export const sampleUsers: User[] = [
@@ -22,6 +21,20 @@ export const sampleUsers: User[] = [
     email: 'vendor@example.com',
     role: 'vendor',
     avatar: 'https://ui-avatars.com/api/?name=Vendor+Jones&background=059669&color=fff',
+  },
+  {
+    id: '4',
+    name: 'Acme Supplies',
+    email: 'contact@acmesupplies.com',
+    role: 'vendor',
+    avatar: 'https://ui-avatars.com/api/?name=Acme+Supplies&background=059669&color=fff',
+  },
+  {
+    id: '5',
+    name: 'Tech Solutions Inc',
+    email: 'info@techsolutions.com',
+    role: 'vendor',
+    avatar: 'https://ui-avatars.com/api/?name=Tech+Solutions&background=059669&color=fff',
   },
 ];
 
@@ -229,24 +242,18 @@ export const sampleContracts: Contract[] = [
   },
 ];
 
-// Helper function to get contracts for a specific agent
 export const getAgentContracts = (agentId: string): Contract[] => {
   return sampleContracts.filter(contract => contract.agentId === agentId);
 };
 
-// Helper function to get an agent by ID
 export const getAgentById = (agentId: string): Agent | undefined => {
   return sampleAgents.find(agent => agent.id === agentId);
 };
 
-// Helper function to get a vendor by ID
 export const getVendorById = (vendorId: string): Vendor | undefined => {
   return sampleVendors.find(vendor => vendor.id === vendorId);
 };
 
-// Helper function to login a user
 export const loginUser = (email: string, password: string): User | null => {
-  // In a real app, you would verify credentials against a backend
-  // Here we're just checking if the email exists in our sample users
   return sampleUsers.find(user => user.email === email) || null;
 };

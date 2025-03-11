@@ -22,6 +22,9 @@ import AdminContracts from "./pages/admin/contracts";
 import AdminReports from "./pages/admin/reports";
 import EditAgent from "./pages/admin/agents/edit/[id]";
 import EditVendor from "./pages/admin/vendors/edit/[id]";
+import VendorContracts from "./pages/vendor/contracts";
+import VendorAgents from "./pages/vendor/agents";
+import VendorMessages from "./pages/vendor/messages";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +56,11 @@ const App = () => (
             <Route path="/agent/contracts/new" element={<NewContract />} />
             <Route path="/agent/vendors" element={<AgentVendors />} />
             <Route path="/agent/messages" element={<AgentMessages />} />
+            
+            {/* Vendor routes */}
+            <Route path="/vendor/contracts" element={<VendorContracts />} />
+            <Route path="/vendor/agents" element={<VendorAgents />} />
+            <Route path="/vendor/messages" element={<VendorMessages />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

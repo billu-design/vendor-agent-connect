@@ -7,10 +7,10 @@ import {
   Building2, 
   FileText, 
   Home, 
+  LogOut,
   Mail, 
   Settings, 
-  Users,
-  LogOut
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -39,7 +39,27 @@ export function Sidebar() {
     { icon: Mail, label: "Messages", path: "/agent/messages" },
   ];
   
-  const links = user.role === 'admin' ? adminLinks : agentLinks;
+  const vendorLinks = [
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: FileText, label: "Contracts", path: "/vendor/contracts" },
+    { icon: Users, label: "Agents", path: "/vendor/agents" },
+    { icon: Mail, label: "Messages", path: "/vendor/messages" },
+  ];
+  
+  let links;
+  switch (user.role) {
+    case 'admin':
+      links = adminLinks;
+      break;
+    case 'agent':
+      links = agentLinks;
+      break;
+    case 'vendor':
+      links = vendorLinks;
+      break;
+    default:
+      links = [];
+  }
 
   return (
     <aside className="h-screen w-64 border-r border-border/40 p-6 bg-card/50 flex flex-col fixed left-0 animate-fade-in">

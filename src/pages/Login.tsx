@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, Shield, User } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -20,6 +22,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'admin' | 'agent' | 'vendor'>('admin');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,14 +44,21 @@ const Login = () => {
     }
   };
 
-  // Demo credentials
-  const setDemoCredentials = (role: 'admin' | 'agent') => {
-    if (role === 'admin') {
-      form.setValue('email', 'admin@example.com');
-      form.setValue('password', 'password');
-    } else {
-      form.setValue('email', 'agent@example.com');
-      form.setValue('password', 'password');
+  // Set demo credentials based on active tab
+  const setDemoCredentials = () => {
+    switch (activeTab) {
+      case 'admin':
+        form.setValue('email', 'admin@example.com');
+        form.setValue('password', 'password');
+        break;
+      case 'agent':
+        form.setValue('email', 'agent@example.com');
+        form.setValue('password', 'password');
+        break;
+      case 'vendor':
+        form.setValue('email', 'vendor@example.com');
+        form.setValue('password', 'password');
+        break;
     }
   };
 
@@ -64,6 +74,24 @@ const Login = () => {
           <CardHeader>
             <CardTitle>Welcome back</CardTitle>
             <CardDescription>Sign in to your account to continue</CardDescription>
+            
+            <Tabs 
+              defaultValue="admin" 
+              className="w-full mt-4"
+              onValueChange={(value) => setActiveTab(value as 'admin' | 'agent' | 'vendor')}
+            >
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="admin" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" /> Admin
+                </TabsTrigger>
+                <TabsTrigger value="agent" className="flex items-center gap-2">
+                  <User className="h-4 w-4" /> Agent
+                </TabsTrigger>
+                <TabsTrigger value="vendor" className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Vendor
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -109,26 +137,16 @@ const Login = () => {
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
             <div className="text-sm text-muted-foreground text-center w-full mb-1">
-              For demo purposes, you can use:
+              For demo purposes, click to auto-fill:
             </div>
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => setDemoCredentials('admin')}
-              >
-                Admin Login
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1" 
-                onClick={() => setDemoCredentials('agent')}
-              >
-                Agent Login
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full" 
+              onClick={setDemoCredentials}
+            >
+              Use Demo Credentials
+            </Button>
           </CardFooter>
         </Card>
       </div>
