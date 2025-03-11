@@ -4,17 +4,20 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
 import { Contract } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { FileText, Mail, Eye } from "lucide-react";
+import { FileText, Mail, Eye, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ContractCardProps {
   contract: Contract;
   onSendEmail?: (contract: Contract) => void;
+  onStatusUpdate?: (contract: Contract) => void;
   isLoading?: boolean;
 }
 
-export function ContractCard({ contract, onSendEmail, isLoading }: ContractCardProps) {
+export function ContractCard({ contract, onSendEmail, onStatusUpdate, isLoading }: ContractCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md group">
@@ -56,7 +59,21 @@ export function ContractCard({ contract, onSendEmail, isLoading }: ContractCardP
         >
           <Eye className="h-4 w-4 mr-1" /> View
         </Button>
-        {onSendEmail && contract.status === 'draft' && (
+        
+        {/* Vendor Update Status Button */}
+        {user?.role === 'vendor' && onStatusUpdate && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onStatusUpdate(contract)}
+          >
+            <RefreshCw className="h-4 w-4 mr-1" /> Update Status
+          </Button>
+        )}
+        
+        {/* Agent Send Email Button */}
+        {user?.role === 'agent' && onSendEmail && contract.status === 'draft' && (
           <Button
             variant="secondary"
             size="sm"
@@ -67,7 +84,9 @@ export function ContractCard({ contract, onSendEmail, isLoading }: ContractCardP
             <Mail className="h-4 w-4 mr-1" /> {isLoading ? 'Sending...' : 'Send'}
           </Button>
         )}
-        {contract.status === 'draft' && (
+        
+        {/* Agent Edit Button */}
+        {user?.role === 'agent' && contract.status === 'draft' && (
           <Button
             variant="outline"
             size="sm"

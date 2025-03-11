@@ -66,6 +66,7 @@ export interface Column {
 
 export interface ContractCardProps {
   contract: Contract;
-  onSendEmail?: () => Promise<void>;
+  onSendEmail?: (contract: Contract) => void;
+  onStatusUpdate?: (contract: Contract) => void;
   isLoading?: boolean;
 }
