@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Vendor, Column } from "@/types";
 import { sampleVendors } from "@/data/sampleData";
-import { Search, Plus, Building2, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { Search, Plus, Building2, Mail, FileText, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -105,7 +105,7 @@ const AgentVendors = () => {
   );
   
   // Set up event listeners for vendor interactions
-  useState(() => {
+  useEffect(() => {
     const handleViewVendor = (e: Event) => {
       const customEvent = e as CustomEvent;
       setSelectedVendor(customEvent.detail.vendor);
