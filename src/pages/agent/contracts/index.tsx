@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContractCard } from "@/components/shared/ContractCard";
 import { FileText, Plus, Send } from "lucide-react";
-import { sampleContracts } from "@/data/sampleData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { sendContractEmail } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getContracts, updateContractStatus } from "@/api/api";
+import { Contract } from "@/types";
 
 const AgentContracts = () => {
   const { user } = useAuth();
@@ -19,8 +21,14 @@ const AgentContracts = () => {
   
   if (!user) return null;
   
-  // Filter contracts for the current agent
-  const agentContracts = sampleContracts.filter(contract => contract.agentName === user.name);
+  // Fetch contracts for the current agent
+  const { data: agentContracts = [], isLoading: isLoadingContracts } = useQuery({
+    queryKey: ['contracts', user.name],
+    queryFn: async () => {
+      // In a real app, this would use the agent's ID
+      return getContracts({ agentName: user.name });
+    }
+  });
   
   // Group contracts by status
   const draftContracts = agentContracts.filter(c => c.status === 'draft');
@@ -37,11 +45,24 @@ const AgentContracts = () => {
     
     try {
       await sendContractEmail(contract.vendorName, contract.id, contract.title);
+      
+      // Also update the contract status to 'sent'
+      await updateContractStatus(contract.id, 'sent');
+      
       toast.success(`Contract sent to ${contract.vendorName}`);
     } catch (error) {
       toast.error('Failed to send contract');
     } finally {
       setIsLoading(null);
+    }
+  };
+  
+  const handleStatusUpdate = async (contract: Contract) => {
+    try {
+      await updateContractStatus(contract.id, contract.status);
+      toast.success(`Contract status updated to ${contract.status}`);
+    } catch (error) {
+      toast.error('Failed to update contract status');
     }
   };
   
@@ -122,12 +143,17 @@ const AgentContracts = () => {
           
           <TabsContent value="all" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {agentContracts.length > 0 ? (
+              {isLoadingContracts ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading contracts...
+                </div>
+              ) : agentContracts.length > 0 ? (
                 agentContracts.map(contract => (
                   <ContractCard 
                     key={contract.id} 
                     contract={contract} 
                     onSendEmail={contract.status === 'draft' ? () => handleSendEmail(contract.id) : undefined}
+                    onStatusUpdate={handleStatusUpdate}
                     isLoading={isLoading === contract.id}
                   />
                 ))

@@ -1,26 +1,31 @@
 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { sampleVendors } from "@/data/sampleData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, RefreshCw } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { useQuery } from "@tanstack/react-query";
+import { getVendors } from "@/api/api";
+import { Vendor } from "@/types";
 
 export default function AgentVendors() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Filter vendors based on the agent's region or relationships
-  const agentVendors = sampleVendors.filter(vendor => 
-    // In a real app, this would filter vendors associated with this agent
-    vendor.status === 'active'
-  );
+  // Fetch vendors
+  const { data: vendors = [], isLoading } = useQuery({
+    queryKey: ['vendors'],
+    queryFn: async () => {
+      // In a real app, this would filter vendors associated with this agent
+      return getVendors({ status: 'active' });
+    }
+  });
   
-  const activeVendors = agentVendors.filter(vendor => vendor.status === 'active');
-  const inactiveVendors = agentVendors.filter(vendor => vendor.status === 'inactive');
+  const activeVendors = vendors.filter(vendor => vendor.status === 'active');
+  const inactiveVendors = vendors.filter(vendor => vendor.status === 'inactive');
   
   return (
     <AppLayout>
@@ -39,7 +44,7 @@ export default function AgentVendors() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-2xl">{agentVendors.length}</CardTitle>
+              <CardTitle className="text-2xl">{vendors.length}</CardTitle>
               <CardDescription>Total Vendors</CardDescription>
             </CardHeader>
           </Card>
@@ -75,8 +80,12 @@ export default function AgentVendors() {
           
           <TabsContent value="all" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {agentVendors.length > 0 ? (
-                agentVendors.map(vendor => (
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading vendors...
+                </div>
+              ) : vendors.length > 0 ? (
+                vendors.map(vendor => (
                   <VendorCard 
                     key={vendor.id}
                     vendor={vendor}
@@ -93,7 +102,11 @@ export default function AgentVendors() {
           
           <TabsContent value="active" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeVendors.length > 0 ? (
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading vendors...
+                </div>
+              ) : activeVendors.length > 0 ? (
                 activeVendors.map(vendor => (
                   <VendorCard 
                     key={vendor.id}
@@ -111,7 +124,11 @@ export default function AgentVendors() {
           
           <TabsContent value="inactive" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {inactiveVendors.length > 0 ? (
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading vendors...
+                </div>
+              ) : inactiveVendors.length > 0 ? (
                 inactiveVendors.map(vendor => (
                   <VendorCard 
                     key={vendor.id}
@@ -137,13 +154,7 @@ const VendorCard = ({
   vendor, 
   onView 
 }: { 
-  vendor: { 
-    id: string; 
-    name: string; 
-    type: string; 
-    location: string; 
-    status: string; 
-  }; 
+  vendor: Vendor; 
   onView: () => void;
 }) => {
   return (

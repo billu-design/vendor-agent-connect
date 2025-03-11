@@ -70,3 +70,16 @@ export interface ContractCardProps {
   onStatusUpdate?: (contract: Contract) => void;
   isLoading?: boolean;
 }
+
+// API response types
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
+
+export interface ApiError {
+  success: false;
+  message: string;
+  code?: string;
+}

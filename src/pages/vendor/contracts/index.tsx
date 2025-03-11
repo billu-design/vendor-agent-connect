@@ -1,146 +1,173 @@
 
-import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useAuth } from "@/contexts/AuthContext";
-import { sampleContracts } from "@/data/sampleData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Contract } from "@/types";
 import { ContractCard } from "@/components/shared/ContractCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getContracts, updateContractStatus } from "@/api/api";
+import { Contract } from "@/types";
 
-export default function VendorContracts() {
+const VendorContracts = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<string>("");
-  const [isUpdating, setIsUpdating] = useState(false);
   
-  // Filter contracts relevant to this vendor
-  const vendorContracts = sampleContracts.filter(
-    (contract) => 
-      contract.vendorName.toLowerCase() === user?.name.toLowerCase() || 
-      contract.vendorId === user?.id
-  );
+  if (!user) return null;
   
-  const filteredContracts = activeTab === "all" 
-    ? vendorContracts 
-    : vendorContracts.filter((contract) => contract.status === activeTab);
-
-  const handleUpdateStatus = (contract: Contract) => {
-    setSelectedContract(contract);
-    setNewStatus(contract.status);
-    setIsUpdateDialogOpen(true);
+  // Fetch contracts for the current vendor
+  const { data: vendorContracts = [], isLoading } = useQuery({
+    queryKey: ['contracts', 'vendor', user.name],
+    queryFn: async () => {
+      // In a real app, this would use the vendor's ID
+      return getContracts({ vendorName: user.name });
+    }
+  });
+  
+  // Group contracts by status
+  const pendingContracts = vendorContracts.filter(c => c.status === 'sent');
+  const activeContracts = vendorContracts.filter(c => c.status === 'signed');
+  const expiredContracts = vendorContracts.filter(c => c.status === 'expired' || c.status === 'cancelled');
+  
+  const handleStatusUpdate = async (contract: Contract) => {
+    try {
+      await updateContractStatus(contract.id, contract.status);
+      toast.success(`Contract status updated to ${contract.status}`);
+    } catch (error) {
+      toast.error('Failed to update contract status');
+    }
   };
-
-  const confirmStatusUpdate = () => {
-    if (!selectedContract || !newStatus) return;
-    
-    setIsUpdating(true);
-    
-    // In a real app, this would be an API call
-    setTimeout(() => {
-      toast.success(`Contract status updated to ${newStatus}`);
-      setIsUpdating(false);
-      setIsUpdateDialogOpen(false);
-    }, 1000);
-  };
-
+  
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">My Contracts</h1>
-        <p className="text-muted-foreground">View and manage your contracts</p>
-      </div>
-
-      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-        <div className="flex justify-between items-center">
+      <div className="animate-fade-in space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Contracts</h1>
+          <p className="text-muted-foreground">View and manage contracts from agents</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl">{pendingContracts.length}</CardTitle>
+              <CardDescription>Pending Review</CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl">{activeContracts.length}</CardTitle>
+              <CardDescription>Active</CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl">{expiredContracts.length}</CardTitle>
+              <CardDescription>Expired/Cancelled</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+        
+        <Tabs defaultValue="all" className="space-y-6">
           <TabsList>
             <TabsTrigger value="all">All Contracts</TabsTrigger>
-            <TabsTrigger value="draft">Drafts</TabsTrigger>
-            <TabsTrigger value="sent">Pending</TabsTrigger>
-            <TabsTrigger value="signed">Active</TabsTrigger>
+            <TabsTrigger value="pending">Pending Review</TabsTrigger>
+            <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="expired">Expired</TabsTrigger>
           </TabsList>
-        </div>
-
-        <TabsContent value={activeTab} className="mt-6">
-          {filteredContracts.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredContracts.map((contract) => (
-                <ContractCard
-                  key={contract.id}
-                  contract={contract}
-                  onStatusUpdate={handleUpdateStatus}
-                  isLoading={isUpdating && selectedContract?.id === contract.id}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>No Contracts Found</CardTitle>
-                <CardDescription>
-                  There are no contracts matching the selected filter.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Check back later or change your filter criteria.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Contract Status Update Dialog */}
-      <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update Contract Status</DialogTitle>
-            <DialogDescription>
-              Change the status of this contract
-            </DialogDescription>
-          </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <p className="text-sm font-medium">Contract: {selectedContract?.title}</p>
-              <p className="text-sm text-muted-foreground">Current status: {selectedContract?.status}</p>
+          <TabsContent value="all" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading contracts...
+                </div>
+              ) : vendorContracts.length > 0 ? (
+                vendorContracts.map(contract => (
+                  <ContractCard 
+                    key={contract.id} 
+                    contract={contract}
+                    onStatusUpdate={handleStatusUpdate}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  No contracts found.
+                </div>
+              )}
             </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="status" className="text-sm font-medium">
-                New Status
-              </label>
-              <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="signed">Active</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          </TabsContent>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmStatusUpdate} disabled={isUpdating}>
-              {isUpdating ? "Updating..." : "Update Status"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <TabsContent value="pending" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading contracts...
+                </div>
+              ) : pendingContracts.length > 0 ? (
+                pendingContracts.map(contract => (
+                  <ContractCard 
+                    key={contract.id} 
+                    contract={contract}
+                    onStatusUpdate={handleStatusUpdate} 
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  No pending contracts found.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="active" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading contracts...
+                </div>
+              ) : activeContracts.length > 0 ? (
+                activeContracts.map(contract => (
+                  <ContractCard 
+                    key={contract.id} 
+                    contract={contract}
+                    onStatusUpdate={handleStatusUpdate}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  No active contracts found.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="expired" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {isLoading ? (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  Loading contracts...
+                </div>
+              ) : expiredContracts.length > 0 ? (
+                expiredContracts.map(contract => (
+                  <ContractCard 
+                    key={contract.id} 
+                    contract={contract}
+                    onStatusUpdate={handleStatusUpdate}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-8 text-center text-muted-foreground">
+                  No expired contracts found.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </AppLayout>
   );
-}
+};
+
+export default VendorContracts;
