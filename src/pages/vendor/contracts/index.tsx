@@ -44,14 +44,9 @@ export default function VendorContracts() {
     
     // In a real app, this would be an API call
     setTimeout(() => {
-      // This is just for UI demonstration - in a real app the contract status 
-      // would be updated in the database
       toast.success(`Contract status updated to ${newStatus}`);
       setIsUpdating(false);
       setIsUpdateDialogOpen(false);
-      
-      // In a real implementation, we would update the contract in the database
-      // and then refresh the data
     }, 1000);
   };
 
@@ -59,7 +54,7 @@ export default function VendorContracts() {
     <AppLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold">My Contracts</h1>
-        <p className="text-muted-foreground">View and manage your contracts with agents</p>
+        <p className="text-muted-foreground">View and manage your contracts</p>
       </div>
 
       <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
@@ -80,7 +75,8 @@ export default function VendorContracts() {
                 <ContractCard
                   key={contract.id}
                   contract={contract}
-                  onStatusUpdate={() => handleUpdateStatus(contract)}
+                  onStatusUpdate={handleUpdateStatus}
+                  isLoading={isUpdating && selectedContract?.id === contract.id}
                 />
               ))}
             </div>
@@ -127,8 +123,6 @@ export default function VendorContracts() {
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="sent">Pending</SelectItem>
                   <SelectItem value="signed">Active</SelectItem>
                   <SelectItem value="expired">Expired</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
