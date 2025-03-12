@@ -10,7 +10,7 @@ const NotFound = () => {
   const { user } = useAuth();
   
   const isAdminPath = location.pathname.startsWith('/admin');
-  const isAgentPath = location.pathname.startsWith('/agent');
+  const isVendorPath = location.pathname.startsWith('/vendor');
 
   useEffect(() => {
     console.error(
@@ -44,16 +44,16 @@ const NotFound = () => {
             </Button>
           )}
           
-          {isAgentPath && user?.role === 'agent' && (
+          {isVendorPath && user?.role === 'vendor' && (
             <Button asChild variant="outline" className="w-full flex gap-2">
-              <Link to="/agent/contracts">
+              <Link to="/vendor/contracts">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Agent Panel
+                Back to Vendor Panel
               </Link>
             </Button>
           )}
           
-          {user && !isAdminPath && !isAgentPath && (
+          {user && !isAdminPath && !isVendorPath && (
             <Button asChild variant="outline" className="w-full flex gap-2">
               <Link to="/">
                 <Home className="h-4 w-4" />
