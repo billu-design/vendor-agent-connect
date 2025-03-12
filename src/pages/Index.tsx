@@ -1,20 +1,47 @@
-
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, Loader } from "lucide-react";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+  const [loading, setLoading] = useState(true);
 
+  // Check authentication status
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get("/api/auth/me");
+        setUser(response.data);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [setUser]);
+
+  // Redirect authenticated users
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      const dashboardPath = user.role === "admin" ? "/admin" : user.role === "agent" ? "/agent" : "/vendor";
+      navigate(dashboardPath);
     }
   }, [user, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <AppLayout requireAuth={false}>
@@ -30,57 +57,43 @@ const Index = () => {
             with vendors, track contract status, and optimize your business operations.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/login')}
-              className="group"
-            >
+            <Button size="lg" onClick={() => navigate("/login")} className="group">
               Get Started 
               <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate('/about')}
-            >
+            <Button variant="outline" size="lg" onClick={() => navigate("/about")}>
               Learn More
             </Button>
           </div>
-          
+
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 border rounded-lg bg-card/50 transition-all duration-300 hover:shadow-md hover:-translate-y-1">
-              <h3 className="text-xl font-semibold mb-2">For Admins</h3>
-              <p className="text-muted-foreground mb-4">
-                Manage agents and vendors, oversee all contracts, and track business performance.
-              </p>
-              <Button variant="link" className="p-0" onClick={() => navigate('/login')}>
-                Admin Login <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="p-6 border rounded-lg bg-card/50 transition-all duration-300 hover:shadow-md hover:-translate-y-1">
-              <h3 className="text-xl font-semibold mb-2">For Agents</h3>
-              <p className="text-muted-foreground mb-4">
-                Create and manage contracts, communicate with vendors, and track contract statuses.
-              </p>
-              <Button variant="link" className="p-0" onClick={() => navigate('/login')}>
-                Agent Login <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="p-6 border rounded-lg bg-card/50 transition-all duration-300 hover:shadow-md hover:-translate-y-1">
-              <h3 className="text-xl font-semibold mb-2">For Vendors</h3>
-              <p className="text-muted-foreground mb-4">
-                Review contracts, track history, and communicate with assigned agents.
-              </p>
-              <Button variant="link" className="p-0" onClick={() => navigate('/login')}>
-                Learn More <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
+            {["Admin", "Agent", "Vendor"].map((role, index) => (
+              <LandingCard key={role} role={role} onClick={() => navigate("/login")} index={index} />
+            ))}
           </div>
         </div>
       </div>
     </AppLayout>
+  );
+};
+
+// LandingCard Component
+const LandingCard = ({ role, onClick, index }) => {
+  const descriptions = {
+    Admin: "Manage agents and vendors, oversee all contracts, and track business performance.",
+    Agent: "Create and manage contracts, communicate with vendors, and track contract statuses.",
+    Vendor: "Review contracts, track history, and communicate with assigned agents.",
+  };
+
+  return (
+    <div className="p-6 border rounded-lg bg-card/50 transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+      <h3 className="text-xl font-semibold mb-2">For {role}s</h3>
+      <p className="text-muted-foreground mb-4">{descriptions[role]}</p>
+      <Button variant="link" className="p-0" onClick={onClick}>
+        {role === "Vendor" ? "Learn More" : `${role} Login`}
+        <ChevronRight className="ml-1 h-4 w-4" />
+      </Button>
+    </div>
   );
 };
 

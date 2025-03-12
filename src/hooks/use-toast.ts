@@ -1,4 +1,5 @@
 import * as React from "react"
+import axios from "axios"
 
 import type {
   ToastActionElement,
@@ -13,6 +14,20 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  loading?: boolean
+}
+
+type ApiToastOptions = {
+  url: string
+  method?: 'get' | 'post' | 'put' | 'delete' | 'patch'
+  data?: any
+  params?: any
+  loadingTitle?: string
+  loadingDescription?: string
+  successTitle?: string
+  successDescription?: string
+  errorTitle?: string
+  errorDescription?: string
 }
 
 const actionTypes = {
@@ -142,7 +157,7 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (props: Partial<ToasterToast>) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
@@ -168,6 +183,66 @@ function toast({ ...props }: Toast) {
   }
 }
 
+async function apiToast(options: ApiToastOptions) {
+  const {
+    url,
+    method = 'get',
+    data,
+    params,
+    loadingTitle = 'Loading',
+    loadingDescription = 'Please wait...',
+    successTitle = 'Success',
+    successDescription = 'Operation completed successfully',
+    errorTitle = 'Error',
+    errorDescription = 'An error occurred'
+  } = options;
+
+  // Create initial loading toast
+  const toastResult = toast({
+    title: loadingTitle,
+    description: loadingDescription,
+    loading: true,
+    duration: Infinity, // Don't auto-dismiss while loading
+  });
+
+  try {
+    // Make the API call
+    const response = await axios({
+      url,
+      method,
+      data,
+      params
+    });
+
+    // Update toast with success message
+    toastResult.update({
+      title: successTitle,
+      description: successDescription,
+      loading: false,
+      duration: 5000, // Auto-dismiss after 5 seconds
+    });
+
+    return response;
+  } catch (error) {
+    // Get error message
+    let message = errorDescription;
+    if (axios.isAxiosError(error) && error.response) {
+      message = error.response.data?.message || errorDescription;
+    }
+
+    // Update toast with error message
+    toastResult.update({
+      title: errorTitle,
+      description: message,
+      loading: false,
+      variant: "destructive",
+      duration: 5000, // Auto-dismiss after 5 seconds
+    });
+
+    throw error;
+  }
+}
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -184,8 +259,9 @@ function useToast() {
   return {
     ...state,
     toast,
+    apiToast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }
 
-export { useToast, toast }
+export { useToast, toast, apiToast }
