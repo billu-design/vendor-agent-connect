@@ -58,6 +58,11 @@ const Login = () => {
     }
   };
 
+  // Get the appropriate page title based on active tab
+  const getPageTitle = () => {
+    return activeTab === 'admin' ? 'Admin Login' : 'Vendor Login';
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/50 p-4">
       <div className="w-full max-w-md animate-scale-in">
@@ -68,13 +73,18 @@ const Login = () => {
         
         <Card className="border-border/50 shadow-lg">
           <CardHeader>
-            <CardTitle>Welcome back</CardTitle>
-            <CardDescription>Sign in to your account to continue</CardDescription>
+            <CardTitle>{getPageTitle()}</CardTitle>
+            <CardDescription>
+              {activeTab === 'admin' 
+                ? 'Sign in to manage vendors and contracts' 
+                : 'Sign in to view and manage your contracts'}
+            </CardDescription>
             
             <Tabs 
               defaultValue="admin" 
               className="w-full mt-4"
               onValueChange={(value) => setActiveTab(value as 'admin' | 'vendor')}
+              value={activeTab}
             >
               <TabsList className="grid grid-cols-2 w-full">
                 <TabsTrigger value="admin" className="flex items-center gap-2">
@@ -96,7 +106,10 @@ const Login = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="your@email.com" {...field} />
+                        <Input 
+                          placeholder={activeTab === 'admin' ? 'admin@example.com' : 'vendor@example.com'} 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -122,7 +135,7 @@ const Login = () => {
                       Signing in...
                     </span>
                   ) : (
-                    'Sign in'
+                    `Sign in as ${activeTab === 'admin' ? 'Admin' : 'Vendor'}`
                   )}
                 </Button>
               </form>
@@ -138,7 +151,7 @@ const Login = () => {
               className="w-full" 
               onClick={setDemoCredentials}
             >
-              Use Demo Credentials
+              Use {activeTab === 'admin' ? 'Admin' : 'Vendor'} Demo Credentials
             </Button>
           </CardFooter>
         </Card>
