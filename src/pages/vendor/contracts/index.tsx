@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getContracts, updateContractStatus } from "@/api/api";
 import { Contract } from "@/types";
+import { ContractActions } from "./ContractActions";
 
 const VendorContracts = () => {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ const VendorContracts = () => {
   if (!user) return null;
   
   // Fetch contracts for the current vendor
-  const { data: vendorContracts = [], isLoading } = useQuery({
+  const { data: vendorContracts = [], isLoading, refetch } = useQuery({
     queryKey: ['contracts', 'vendor', user.name],
     queryFn: async () => {
       // In a real app, this would use the vendor's ID
@@ -33,6 +34,7 @@ const VendorContracts = () => {
     try {
       await updateContractStatus(contract.id, contract.status);
       toast.success(`Contract status updated to ${contract.status}`);
+      refetch();
     } catch (error) {
       toast.error('Failed to update contract status');
     }
@@ -89,6 +91,7 @@ const VendorContracts = () => {
                     key={contract.id} 
                     contract={contract}
                     onStatusUpdate={handleStatusUpdate}
+                    actions={<ContractActions contract={contract} onStatusUpdate={handleStatusUpdate} />}
                   />
                 ))
               ) : (
@@ -110,7 +113,8 @@ const VendorContracts = () => {
                   <ContractCard 
                     key={contract.id} 
                     contract={contract}
-                    onStatusUpdate={handleStatusUpdate} 
+                    onStatusUpdate={handleStatusUpdate}
+                    actions={<ContractActions contract={contract} onStatusUpdate={handleStatusUpdate} />}
                   />
                 ))
               ) : (
@@ -133,6 +137,7 @@ const VendorContracts = () => {
                     key={contract.id} 
                     contract={contract}
                     onStatusUpdate={handleStatusUpdate}
+                    actions={<ContractActions contract={contract} onStatusUpdate={handleStatusUpdate} />}
                   />
                 ))
               ) : (
@@ -155,6 +160,7 @@ const VendorContracts = () => {
                     key={contract.id} 
                     contract={contract}
                     onStatusUpdate={handleStatusUpdate}
+                    actions={<ContractActions contract={contract} onStatusUpdate={handleStatusUpdate} />}
                   />
                 ))
               ) : (

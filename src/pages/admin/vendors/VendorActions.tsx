@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Vendor } from '@/types';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface VendorActionsProps {
@@ -17,11 +17,25 @@ export const VendorActions = ({ vendor, onDelete }: VendorActionsProps) => {
       <Button 
         variant="ghost" 
         size="icon" 
+        onClick={() => navigate(`/admin/vendors/${vendor.id}`)}
+        title="View Details"
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="icon" 
         onClick={() => navigate(`/admin/vendors/edit/${vendor.id}`)}
+        title="Edit Vendor"
       >
         <Edit className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={() => onDelete(vendor)}>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={() => onDelete(vendor)}
+        title="Delete Vendor"
+      >
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>

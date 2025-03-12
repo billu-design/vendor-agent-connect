@@ -19,6 +19,7 @@ import AdminReports from "./pages/admin/reports";
 import EditAgent from "./pages/admin/agents/edit/[id]";
 import EditVendor from "./pages/admin/vendors/edit/[id]";
 import VendorContracts from "./pages/vendor/contracts";
+import VendorContractDetails from "./pages/vendor/contracts/[id]";
 import VendorAgents from "./pages/vendor/agents";
 import VendorMessages from "./pages/vendor/messages";
 
@@ -49,6 +50,7 @@ const App = () => (
             
             {/* Vendor routes */}
             <Route path="/vendor/contracts" element={<VendorContracts />} />
+            <Route path="/vendor/contracts/:id" element={<VendorContractDetails />} />
             <Route path="/vendor/agents" element={<VendorAgents />} />
             <Route path="/vendor/messages" element={<VendorMessages />} />
             
