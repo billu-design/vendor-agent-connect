@@ -9,13 +9,6 @@ export const sampleUsers: User[] = [
     avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff',
   },
   {
-    id: '2',
-    name: 'Agent Smith',
-    email: 'agent@example.com',
-    role: 'agent',
-    avatar: 'https://ui-avatars.com/api/?name=Agent+Smith&background=2563EB&color=fff',
-  },
-  {
     id: '3',
     name: 'Vendor Jones',
     email: 'vendor@example.com',

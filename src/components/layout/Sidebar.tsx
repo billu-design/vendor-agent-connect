@@ -32,13 +32,6 @@ export function Sidebar() {
     { icon: BarChart2, label: "Reports", path: "/admin/reports" },
   ];
   
-  const agentLinks = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: FileText, label: "Contracts", path: "/agent/contracts" },
-    { icon: Building2, label: "Vendors", path: "/agent/vendors" },
-    { icon: Mail, label: "Messages", path: "/agent/messages" },
-  ];
-  
   const vendorLinks = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: FileText, label: "Contracts", path: "/vendor/contracts" },
@@ -50,9 +43,6 @@ export function Sidebar() {
   switch (user.role) {
     case 'admin':
       links = adminLinks;
-      break;
-    case 'agent':
-      links = agentLinks;
       break;
     case 'vendor':
       links = vendorLinks;

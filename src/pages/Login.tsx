@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Shield, User } from "lucide-react";
+import { Building2, Shield } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -22,7 +22,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'admin' | 'agent' | 'vendor'>('admin');
+  const [activeTab, setActiveTab] = useState<'admin' | 'vendor'>('admin');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,10 +51,6 @@ const Login = () => {
         form.setValue('email', 'admin@example.com');
         form.setValue('password', 'password');
         break;
-      case 'agent':
-        form.setValue('email', 'agent@example.com');
-        form.setValue('password', 'password');
-        break;
       case 'vendor':
         form.setValue('email', 'vendor@example.com');
         form.setValue('password', 'password');
@@ -67,7 +63,7 @@ const Login = () => {
       <div className="w-full max-w-md animate-scale-in">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Vendor Connect</h1>
-          <p className="text-muted-foreground mt-2">Streamline agent-vendor contract management</p>
+          <p className="text-muted-foreground mt-2">Streamline vendor contract management</p>
         </div>
         
         <Card className="border-border/50 shadow-lg">
@@ -78,14 +74,11 @@ const Login = () => {
             <Tabs 
               defaultValue="admin" 
               className="w-full mt-4"
-              onValueChange={(value) => setActiveTab(value as 'admin' | 'agent' | 'vendor')}
+              onValueChange={(value) => setActiveTab(value as 'admin' | 'vendor')}
             >
-              <TabsList className="grid grid-cols-3 w-full">
+              <TabsList className="grid grid-cols-2 w-full">
                 <TabsTrigger value="admin" className="flex items-center gap-2">
                   <Shield className="h-4 w-4" /> Admin
-                </TabsTrigger>
-                <TabsTrigger value="agent" className="flex items-center gap-2">
-                  <User className="h-4 w-4" /> Agent
                 </TabsTrigger>
                 <TabsTrigger value="vendor" className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" /> Vendor

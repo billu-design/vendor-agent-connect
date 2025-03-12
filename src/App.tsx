@@ -14,10 +14,6 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
-import AgentContracts from "./pages/agent/contracts";
-import NewContract from "./pages/agent/contracts/new";
-import AgentVendors from "./pages/agent/vendors";
-import AgentMessages from "./pages/agent/messages";
 import AdminContracts from "./pages/admin/contracts";
 import AdminReports from "./pages/admin/reports";
 import EditAgent from "./pages/admin/agents/edit/[id]";
@@ -50,12 +46,6 @@ const App = () => (
             <Route path="/admin/vendors/edit/:id" element={<EditVendor />} />
             <Route path="/admin/contracts" element={<AdminContracts />} />
             <Route path="/admin/reports" element={<AdminReports />} />
-            
-            {/* Agent routes */}
-            <Route path="/agent/contracts" element={<AgentContracts />} />
-            <Route path="/agent/contracts/new" element={<NewContract />} />
-            <Route path="/agent/vendors" element={<AgentVendors />} />
-            <Route path="/agent/messages" element={<AgentMessages />} />
             
             {/* Vendor routes */}
             <Route path="/vendor/contracts" element={<VendorContracts />} />
