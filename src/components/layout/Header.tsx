@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,31 +7,28 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-
 export function Header() {
-  const { user, logout } = useAuth();
+  const {
+    user,
+    logout
+  } = useAuth();
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-
   const handleLogout = () => {
     setIsLogoutDialogOpen(true);
   };
-
   const confirmLogout = () => {
     logout();
     navigate('/login');
     toast.success('Logged out successfully');
   };
-
-  return (
-    <header className="w-full h-16 border-b border-border/40 backdrop-blur-sm bg-background/90 flex items-center px-6 justify-between sticky top-0 z-50 animate-fade-in">
+  return <header className="w-full h-16 border-b border-border/40 backdrop-blur-sm bg-background/90 flex items-center px-6 justify-between sticky top-0 z-50 animate-fade-in">
       <div className="flex items-center gap-2">
-        <h1 className="text-xl font-semibold tracking-tight">Vendor Connect</h1>
+        <h1 className="text-xl font-semibold tracking-tight mx-[16px]">ATS web portal</h1>
       </div>
       
-      {user && (
-        <div className="flex items-center gap-4">
+      {user && <div className="flex items-center gap-4">
           <DropdownMenu open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
@@ -79,8 +75,7 @@ export function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      )}
+        </div>}
 
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
         <AlertDialogContent>
@@ -96,6 +91,5 @@ export function Header() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </header>
-  );
+    </header>;
 }
