@@ -1,5 +1,5 @@
+
 import { useState } from 'react';
-import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,39 +30,27 @@ export const AddAgentDialog = ({ open, onOpenChange, onAddAgent }: AddAgentDialo
     status: 'active',
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const handleAddAgent = async () => {
+  const handleAddAgent = () => {
     if (!newAgent.name || !newAgent.email || !newAgent.phone || !newAgent.region) {
       toast.error('Please fill in all required fields');
       return;
     }
-
-    setLoading(true);
-
-    try {
-      const response = await axios.post('/api/agents', {
-        name: newAgent.name,
-        email: newAgent.email,
-        phone: newAgent.phone,
-        region: newAgent.region,
-        status: newAgent.status as 'active' | 'inactive',
-      });
-
-      if (response.status === 201) {
-        toast.success('Agent added successfully');
-        onAddAgent(response.data);
-        setNewAgent({ name: '', email: '', phone: '', region: '', status: 'active' });
-        onOpenChange(false);
-      } else {
-        throw new Error('Failed to add agent');
-      }
-    } catch (error) {
-      toast.error('Error adding agent. Please try again.');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    
+    onAddAgent({
+      name: newAgent.name,
+      email: newAgent.email,
+      phone: newAgent.phone,
+      region: newAgent.region,
+      status: newAgent.status as 'active' | 'inactive',
+    });
+    
+    setNewAgent({
+      name: '',
+      email: '',
+      phone: '',
+      region: '',
+      status: 'active',
+    });
   };
 
   return (
@@ -70,7 +58,9 @@ export const AddAgentDialog = ({ open, onOpenChange, onAddAgent }: AddAgentDialo
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Agent</DialogTitle>
-          <DialogDescription>Enter the details of the new agent below.</DialogDescription>
+          <DialogDescription>
+            Enter the details of the new agent below.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -127,12 +117,10 @@ export const AddAgentDialog = ({ open, onOpenChange, onAddAgent }: AddAgentDialo
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleAddAgent} disabled={loading}>
-            {loading ? 'Adding...' : 'Add Agent'}
-          </Button>
+          <Button onClick={handleAddAgent}>Add Agent</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

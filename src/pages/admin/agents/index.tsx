@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+
+import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable';
+import { sampleAgents } from '@/data/sampleData';
 import { Agent } from '@/types';
 import { UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,59 +12,31 @@ import { AgentActions } from './AgentActions';
 import { AddAgentDialog } from './AddAgentDialog';
 
 const Agents = () => {
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>(sampleAgents);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Fetch agents from API
-  useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        const response = await axios.get('/api/agents');
-        setAgents(response.data);
-      } catch (error) {
-        setError('Failed to load agents.');
-        toast.error('Error fetching agents. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+  
+  const handleDelete = (agent: Agent) => {
+    setAgents(agents.filter(a => a.id !== agent.id));
+    toast.success(`${agent.name} has been removed`);
+  };
+  
+  const handleAddAgent = (newAgentData: Omit<Agent, 'id' | 'contractsCount' | 'joinDate'>) => {
+    const agent: Agent = {
+      id: (agents.length + 1).toString(),
+      name: newAgentData.name,
+      email: newAgentData.email,
+      phone: newAgentData.phone,
+      region: newAgentData.region,
+      status: newAgentData.status,
+      contractsCount: 0,
+      joinDate: new Date().toISOString().split('T')[0],
     };
-
-    fetchAgents();
-  }, []);
-
-  // Delete an agent
-  const handleDelete = async (agent: Agent) => {
-    if (!window.confirm(`Are you sure you want to delete ${agent.name}?`)) return;
-
-    try {
-      await axios.delete(`/api/agents/${agent.id}`);
-      setAgents((prev) => prev.filter((a) => a.id !== agent.id));
-      toast.success(`${agent.name} has been removed`);
-    } catch (error) {
-      toast.error('Failed to delete agent. Please try again.');
-    }
+    
+    setAgents([...agents, agent]);
+    setIsAddDialogOpen(false);
+    toast.success(`${agent.name} has been added as an agent`);
   };
-
-  // Add a new agent
-  const handleAddAgent = async (newAgentData: Omit<Agent, 'id' | 'contractsCount' | 'joinDate'>) => {
-    try {
-      const response = await axios.post('/api/agents', {
-        ...newAgentData,
-      });
-
-      setAgents((prev) => [...prev, response.data]);
-      setIsAddDialogOpen(false);
-      toast.success(`${response.data.name} has been added as an agent`);
-    } catch (error) {
-      toast.error('Error adding agent. Please try again.');
-    }
-  };
-
-  if (loading) return <p>Loading agents...</p>;
-  if (error) return <p>{error}</p>;
-
+  
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
@@ -74,13 +47,13 @@ const Agents = () => {
             Add Agent
           </Button>
         </div>
-
+        
         <DataTable 
           columns={AgentColumns} 
           data={agents} 
           actions={(agent) => <AgentActions agent={agent} onDelete={handleDelete} />}
         />
-
+        
         <AddAgentDialog
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}

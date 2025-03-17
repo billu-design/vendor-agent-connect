@@ -1,11 +1,11 @@
-import { useState } from "react";
-import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Vendor } from "@/types";
-import { toast } from "sonner";
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Vendor } from '@/types';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -18,56 +18,42 @@ import {
 interface AddVendorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddVendor: (vendor: Vendor) => void;
+  onAddVendor: (vendor: Omit<Vendor, 'id' | 'joinDate'>) => void;
 }
 
 export const AddVendorDialog = ({ open, onOpenChange, onAddVendor }: AddVendorDialogProps) => {
   const [newVendor, setNewVendor] = useState<Partial<Vendor>>({
-    name: "",
-    email: "",
-    phone: "",
-    location: "",
-    type: "",
-    status: "active",
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    type: '',
+    status: 'active',
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleAddVendor = async () => {
+  const handleAddVendor = () => {
     if (!newVendor.name || !newVendor.email || !newVendor.phone || !newVendor.location || !newVendor.type) {
-      toast.error("Please fill in all required fields");
+      toast.error('Please fill in all required fields');
       return;
     }
-
-    setIsLoading(true);
-
-    try {
-      const response = await axios.post("/api/vendors", {
-        name: newVendor.name,
-        email: newVendor.email,
-        phone: newVendor.phone,
-        location: newVendor.location,
-        type: newVendor.type,
-        status: newVendor.status as "active" | "inactive",
-      });
-
-      toast.success(`Vendor ${response.data.name} added successfully.`);
-      onAddVendor(response.data);
-      onOpenChange(false);
-
-      setNewVendor({
-        name: "",
-        email: "",
-        phone: "",
-        location: "",
-        type: "",
-        status: "active",
-      });
-    } catch (error) {
-      toast.error("Error adding vendor. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    
+    onAddVendor({
+      name: newVendor.name,
+      email: newVendor.email,
+      phone: newVendor.phone,
+      location: newVendor.location,
+      type: newVendor.type,
+      status: newVendor.status as 'active' | 'inactive',
+    });
+    
+    setNewVendor({
+      name: '',
+      email: '',
+      phone: '',
+      location: '',
+      type: '',
+      status: 'active',
+    });
   };
 
   return (
@@ -75,7 +61,9 @@ export const AddVendorDialog = ({ open, onOpenChange, onAddVendor }: AddVendorDi
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Vendor</DialogTitle>
-          <DialogDescription>Enter the details of the new vendor below.</DialogDescription>
+          <DialogDescription>
+            Enter the details of the new vendor below.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -128,7 +116,7 @@ export const AddVendorDialog = ({ open, onOpenChange, onAddVendor }: AddVendorDi
             <Label htmlFor="status">Status</Label>
             <Select
               value={newVendor.status}
-              onValueChange={(value: "active" | "inactive") => setNewVendor({ ...newVendor, status: value })}
+              onValueChange={(value: 'active' | 'inactive') => setNewVendor({ ...newVendor, status: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -141,12 +129,10 @@ export const AddVendorDialog = ({ open, onOpenChange, onAddVendor }: AddVendorDi
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleAddVendor} disabled={isLoading}>
-            {isLoading ? "Adding..." : "Add Vendor"}
-          </Button>
+          <Button onClick={handleAddVendor}>Add Vendor</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

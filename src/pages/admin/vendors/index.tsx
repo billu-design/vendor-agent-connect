@@ -1,69 +1,43 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/shared/DataTable";
-import { Vendor } from "@/types";
-import { Building2 } from "lucide-react";
-import { toast } from "sonner";
-import { VendorColumns } from "./VendorColumns";
-import { VendorActions } from "./VendorActions";
-import { AddVendorDialog } from "./AddVendorDialog";
+
+import { useState } from 'react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/shared/DataTable';
+import { sampleVendors } from '@/data/sampleData';
+import { Vendor } from '@/types';
+import { Building2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { VendorColumns } from './VendorColumns';
+import { VendorActions } from './VendorActions';
+import { AddVendorDialog } from './AddVendorDialog';
 
 const Vendors = () => {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>(sampleVendors);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Fetch vendors from API
-  useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const response = await axios.get("/api/vendors");
-        setVendors(response.data);
-      } catch (error) {
-        setError("Failed to load vendors.");
-        toast.error("Error fetching vendors. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+  
+  const handleDelete = (vendor: Vendor) => {
+    // This is just a demo, so we'll just filter the vendor out
+    setVendors(vendors.filter(v => v.id !== vendor.id));
+    toast.success(`${vendor.name} has been removed`);
+  };
+  
+  const handleAddVendor = (newVendorData: Omit<Vendor, 'id' | 'joinDate'>) => {
+    const vendor: Vendor = {
+      id: (vendors.length + 1).toString(),
+      name: newVendorData.name,
+      email: newVendorData.email,
+      phone: newVendorData.phone,
+      location: newVendorData.location,
+      type: newVendorData.type,
+      status: newVendorData.status,
+      joinDate: new Date().toISOString().split('T')[0],
     };
-
-    fetchVendors();
-  }, []);
-
-  // Delete a vendor
-  const handleDelete = async (vendor: Vendor) => {
-    if (!window.confirm(`Are you sure you want to delete ${vendor.name}?`)) return;
-
-    try {
-      await axios.delete(`/api/vendors/${vendor.id}`);
-      setVendors((prev) => prev.filter((v) => v.id !== vendor.id));
-      toast.success(`${vendor.name} has been removed`);
-    } catch (error) {
-      toast.error("Failed to delete vendor. Please try again.");
-    }
+    
+    setVendors([...vendors, vendor]);
+    setIsAddDialogOpen(false);
+    toast.success(`${vendor.name} has been added as a vendor`);
   };
-
-  // Add a new vendor
-  const handleAddVendor = async (newVendorData: Omit<Vendor, "id" | "joinDate">) => {
-    try {
-      const response = await axios.post("/api/vendors", {
-        ...newVendorData,
-      });
-
-      setVendors((prev) => [...prev, response.data]);
-      setIsAddDialogOpen(false);
-      toast.success(`${response.data.name} has been added as a vendor`);
-    } catch (error) {
-      toast.error("Error adding vendor. Please try again.");
-    }
-  };
-
-  if (loading) return <p>Loading vendors...</p>;
-  if (error) return <p>{error}</p>;
-
+  
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
@@ -74,14 +48,18 @@ const Vendors = () => {
             Add Vendor
           </Button>
         </div>
-
-        <DataTable
-          columns={VendorColumns}
-          data={vendors}
+        
+        <DataTable 
+          columns={VendorColumns} 
+          data={vendors} 
           actions={(vendor) => <VendorActions vendor={vendor} onDelete={handleDelete} />}
         />
-
-        <AddVendorDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onAddVendor={handleAddVendor} />
+        
+        <AddVendorDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onAddVendor={handleAddVendor}
+        />
       </div>
     </AppLayout>
   );

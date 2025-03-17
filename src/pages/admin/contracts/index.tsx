@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Contract, Column } from "@/types";
+import { sampleContracts } from "@/data/sampleData";
 import { Search, Plus, FileText, Download } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { toast } from "sonner";
+import { useState } from "react";
 
 // Define columns for the contracts table
 const columns: Column[] = [
@@ -46,10 +46,10 @@ const columns: Column[] = [
         expired: { color: "bg-gray-100 text-gray-800" },
         cancelled: { color: "bg-red-100 text-red-800" },
       };
-
+      
       const status = row.original.status;
       const style = statusMap[status] || { color: "bg-gray-100 text-gray-800" };
-
+      
       return (
         <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style.color}`}>
           {status}
@@ -89,45 +89,21 @@ const columns: Column[] = [
 ];
 
 const AdminContracts = () => {
-  const [contracts, setContracts] = useState<Contract[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Fetch contracts from API
-  useEffect(() => {
-    const fetchContracts = async () => {
-      try {
-        const response = await axios.get("/api/contracts");
-        setContracts(response.data);
-      } catch (error) {
-        setError("Failed to load contracts.");
-        toast.error("Error fetching contracts. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContracts();
-  }, []);
-
+  
   // Filter contracts based on search query
-  const filteredContracts = contracts.filter(
-    (contract) =>
-      contract.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contract.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contract.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contract.status.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContracts = sampleContracts.filter(contract => 
+    contract.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contract.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contract.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contract.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
   // Calculate summary statistics
   const totalValue = filteredContracts.reduce((sum, contract) => sum + contract.value, 0);
-  const activeContracts = filteredContracts.filter((c) => c.status === "signed");
-  const pendingContracts = filteredContracts.filter((c) => c.status === "draft" || c.status === "sent");
-
-  if (loading) return <p>Loading contracts...</p>;
-  if (error) return <p>{error}</p>;
-
+  const activeContracts = filteredContracts.filter(c => c.status === 'signed');
+  const pendingContracts = filteredContracts.filter(c => c.status === 'draft' || c.status === 'sent');
+  
   return (
     <AppLayout>
       <div className="animate-fade-in space-y-6">
@@ -141,7 +117,7 @@ const AdminContracts = () => {
             Add Contract
           </Button>
         </div>
-
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -149,41 +125,55 @@ const AdminContracts = () => {
               <CardDescription>Total Contracts</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">All contracts in the system</p>
+              <p className="text-sm text-muted-foreground">
+                All contracts in the system
+              </p>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-2xl">{formatCurrency(totalValue)}</CardTitle>
+              <CardTitle className="text-2xl">
+                {formatCurrency(totalValue)}
+              </CardTitle>
               <CardDescription>Total Value</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Combined value of all contracts</p>
+              <p className="text-sm text-muted-foreground">
+                Combined value of all contracts
+              </p>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-2xl">{activeContracts.length}</CardTitle>
+              <CardTitle className="text-2xl">
+                {activeContracts.length}
+              </CardTitle>
               <CardDescription>Active Contracts</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Currently signed and active</p>
+              <p className="text-sm text-muted-foreground">
+                Currently signed and active
+              </p>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-2xl">{pendingContracts.length}</CardTitle>
+              <CardTitle className="text-2xl">
+                {pendingContracts.length}
+              </CardTitle>
               <CardDescription>Pending Contracts</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Awaiting signatures</p>
+              <p className="text-sm text-muted-foreground">
+                Awaiting signatures
+              </p>
             </CardContent>
           </Card>
         </div>
-
+        
         <Card>
           <CardHeader>
             <CardTitle>All Contracts</CardTitle>
@@ -191,12 +181,23 @@ const AdminContracts = () => {
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex items-center gap-2">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search contracts..." className="pl-8" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search contracts..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               <Button variant="outline">Filters</Button>
             </div>
-
-            <DataTable columns={columns} data={filteredContracts} searchKey="title" />
+            
+            <DataTable
+              columns={columns}
+              data={filteredContracts}
+              searchKey="title"
+            />
           </CardContent>
         </Card>
       </div>
