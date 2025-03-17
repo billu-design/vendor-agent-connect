@@ -7,11 +7,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const Profile = () => {
   const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!user) return null;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSaveChanges = () => {
+    setIsLoading(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      // In a real app, this would update the user in the database
+      setIsLoading(false);
+      toast.success('Profile updated successfully');
+    }, 800);
+  };
 
   return (
     <AppLayout>
@@ -44,7 +68,11 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" defaultValue={user.name} />
+                  <Input 
+                    id="name" 
+                    value={formData.name}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -60,7 +88,16 @@ const Profile = () => {
               <Separator className="my-4" />
               
               <div className="flex justify-end">
-                <Button>Save Changes</Button>
+                <Button onClick={handleSaveChanges} disabled={isLoading}>
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Saving...
+                    </div>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
