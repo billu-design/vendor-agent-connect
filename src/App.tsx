@@ -20,8 +20,9 @@ import EditAgent from "./pages/admin/agents/edit/[id]";
 import EditVendor from "./pages/admin/vendors/edit/[id]";
 import VendorContracts from "./pages/vendor/contracts";
 import VendorContractDetails from "./pages/vendor/contracts/[id]";
-import VendorAgents from "./pages/vendor/agents";
 import VendorMessages from "./pages/vendor/messages";
+import AdminServices from "./pages/admin/services";
+import AgentDetails from "./pages/admin/agents/[id]";
 
 const queryClient = new QueryClient();
 
@@ -42,16 +43,17 @@ const App = () => (
             
             {/* Admin routes */}
             <Route path="/admin/agents" element={<Agents />} />
+            <Route path="/admin/agents/:id" element={<AgentDetails />} />
             <Route path="/admin/agents/edit/:id" element={<EditAgent />} />
             <Route path="/admin/vendors" element={<Vendors />} />
             <Route path="/admin/vendors/edit/:id" element={<EditVendor />} />
+            <Route path="/admin/services" element={<AdminServices />} />
             <Route path="/admin/contracts" element={<AdminContracts />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             
             {/* Vendor routes */}
             <Route path="/vendor/contracts" element={<VendorContracts />} />
             <Route path="/vendor/contracts/:id" element={<VendorContractDetails />} />
-            <Route path="/vendor/agents" element={<VendorAgents />} />
             <Route path="/vendor/messages" element={<VendorMessages />} />
             
             {/* Catch-all route */}

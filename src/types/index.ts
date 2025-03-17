@@ -18,6 +18,7 @@ export interface Agent {
   contractsCount: number;
   region: string;
   joinDate: string;
+  address?: string;
 }
 
 export interface Vendor {
@@ -69,6 +70,7 @@ export interface ContractCardProps {
   onSendEmail?: (contract: Contract) => void;
   onStatusUpdate?: (contract: Contract) => void;
   isLoading?: boolean;
+  actions?: React.ReactNode;
 }
 
 // API response types

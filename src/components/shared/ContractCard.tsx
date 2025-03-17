@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
@@ -12,9 +13,10 @@ interface ContractCardProps {
   onSendEmail?: (contract: Contract) => void;
   onStatusUpdate?: (contract: Contract) => void;
   isLoading?: boolean;
+  actions?: React.ReactNode;
 }
 
-export function ContractCard({ contract, onSendEmail, onStatusUpdate, isLoading }: ContractCardProps) {
+export function ContractCard({ contract, onSendEmail, onStatusUpdate, isLoading, actions }: ContractCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -53,26 +55,32 @@ export function ContractCard({ contract, onSendEmail, onStatusUpdate, isLoading 
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1"
-          onClick={() => navigate(`/contracts/${contract.id}`)}
-        >
-          <Eye className="h-4 w-4 mr-1" /> View
-        </Button>
-        
-        {/* Only show update status button for vendors */}
-        {user?.role === 'vendor' && onStatusUpdate && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex-1"
-            onClick={() => onStatusUpdate(contract)}
-            disabled={isLoading}
-          >
-            <RefreshCw className="h-4 w-4 mr-1" /> {isLoading ? 'Updating...' : 'Update Status'}
-          </Button>
+        {actions ? (
+          actions
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1"
+              onClick={() => navigate(`/contracts/${contract.id}`)}
+            >
+              <Eye className="h-4 w-4 mr-1" /> View
+            </Button>
+            
+            {/* Only show update status button for vendors */}
+            {user?.role === 'vendor' && onStatusUpdate && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => onStatusUpdate(contract)}
+                disabled={isLoading}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" /> {isLoading ? 'Updating...' : 'Update Status'}
+              </Button>
+            )}
+          </>
         )}
       </CardFooter>
     </Card>
