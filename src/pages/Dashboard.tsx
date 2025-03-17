@@ -65,7 +65,7 @@ const Dashboard = () => {
       <div className="space-y-6 animate-fade-in">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          {!isAdmin && (
+          {user?.role === 'agent' && (
             <Button onClick={() => navigate('/agent/contracts/new')}>
               <FileText className="mr-2 h-4 w-4" />
               New Contract
@@ -141,44 +141,46 @@ const Dashboard = () => {
           
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {isAdmin ? (
-                    <>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/agents')}>
-                        <Users className="mr-2 h-4 w-4" /> Manage Agents
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/vendors')}>
-                        <Building2 className="mr-2 h-4 w-4" /> Manage Vendors
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/contracts')}>
-                        <FileText className="mr-2 h-4 w-4" /> View All Contracts
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/reports')}>
-                        <BarChart className="mr-2 h-4 w-4" /> View Reports
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/contracts/new')}>
-                        <FileText className="mr-2 h-4 w-4" /> Create New Contract
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/contracts')}>
-                        <FileText className="mr-2 h-4 w-4" /> View All Contracts
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/vendors')}>
-                        <Building2 className="mr-2 h-4 w-4" /> View Vendors
-                      </Button>
-                      <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/messages')}>
-                        <TrendingUp className="mr-2 h-4 w-4" /> Message Center
-                      </Button>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+              {isAdmin || user?.role === 'agent' ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl">Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {isAdmin ? (
+                      <>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/agents')}>
+                          <Users className="mr-2 h-4 w-4" /> Manage Agents
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/vendors')}>
+                          <Building2 className="mr-2 h-4 w-4" /> Manage Vendors
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/contracts')}>
+                          <FileText className="mr-2 h-4 w-4" /> View All Contracts
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/admin/reports')}>
+                          <BarChart className="mr-2 h-4 w-4" /> View Reports
+                        </Button>
+                      </>
+                    ) : user?.role === 'agent' ? (
+                      <>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/contracts/new')}>
+                          <FileText className="mr-2 h-4 w-4" /> Create New Contract
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/contracts')}>
+                          <FileText className="mr-2 h-4 w-4" /> View All Contracts
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/vendors')}>
+                          <Building2 className="mr-2 h-4 w-4" /> View Vendors
+                        </Button>
+                        <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/agent/messages')}>
+                          <TrendingUp className="mr-2 h-4 w-4" /> Message Center
+                        </Button>
+                      </>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              ) : null}
               
               <Card>
                 <CardHeader>
