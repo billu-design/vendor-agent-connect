@@ -25,11 +25,11 @@ export function Header() {
     // First close the dialog
     setIsLogoutDialogOpen(false);
     
-    // Then perform logout and navigation with a slight delay
-    setTimeout(() => {
-      logout();
-      navigate('/login');
-    }, 100);
+    // Perform logout
+    logout();
+    
+    // Navigate to login page after logout
+    navigate('/login');
   };
   
   return <header className="w-full h-16 border-b border-border/40 backdrop-blur-sm bg-background/90 flex items-center px-6 justify-between sticky top-0 z-50 animate-fade-in">

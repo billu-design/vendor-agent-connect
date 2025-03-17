@@ -16,7 +16,12 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   
   useEffect(() => {
     if (!loading && requireAuth && !user) {
-      navigate('/login');
+      // Navigate with a small delay to ensure context update completes
+      const timer = setTimeout(() => {
+        navigate('/login');
+      }, 0);
+      
+      return () => clearTimeout(timer);
     }
   }, [loading, requireAuth, user, navigate]);
   

@@ -51,15 +51,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    // Clear user data from localStorage
+    // Clear user data from localStorage first
     localStorage.removeItem('user');
     
-    // Important: Use setTimeout to ensure the state update happens after the current render cycle
-    setTimeout(() => {
-      // Update the state after a small delay
-      setUser(null);
-      toast.success('Logged out successfully');
-    }, 0);
+    // Update state immediately
+    setUser(null);
+    toast.success('Logged out successfully');
   };
 
   const value = {
