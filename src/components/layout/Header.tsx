@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,7 +7,7 @@ import { Bell, ChevronDown, LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+
 export function Header() {
   const {
     user,
@@ -15,17 +16,27 @@ export function Header() {
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  
   const handleLogout = () => {
     setIsLogoutDialogOpen(true);
   };
+  
   const confirmLogout = () => {
-    logout();
-    navigate('/login');
-    toast.success('Logged out successfully');
+    // First close the dialog
+    setIsLogoutDialogOpen(false);
+    
+    // Then perform logout and navigation with a slight delay
+    setTimeout(() => {
+      logout();
+      navigate('/login');
+    }, 100);
   };
+  
   return <header className="w-full h-16 border-b border-border/40 backdrop-blur-sm bg-background/90 flex items-center px-6 justify-between sticky top-0 z-50 animate-fade-in">
       <div className="flex items-center gap-2">
-        <h1 className="text-xl font-semibold tracking-tight mx-[16px]">ATS web portal</h1>
+        <h1 className="text-xl font-semibold tracking-tight mx-[16px]">
+          {user && user.role === 'admin' ? 'ADMIN-CONNECT' : 'VENDOR-CONNECT'}
+        </h1>
       </div>
       
       {user && <div className="flex items-center gap-4">

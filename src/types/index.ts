@@ -1,4 +1,3 @@
-
 export type Role = 'admin' | 'vendor';
 
 export interface User {
@@ -45,6 +44,12 @@ export interface Contract {
   value: number;
   document: string;
   notes?: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
 }
 
 export interface AuthContextType {

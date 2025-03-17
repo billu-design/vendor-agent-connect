@@ -2,16 +2,14 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { AddServiceDialog } from './AddServiceDialog';
-
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-}
+import { EditServiceDialog } from './EditServiceDialog';
+import { DataTable } from '@/components/shared/DataTable';
+import { ServiceColumns } from './ServiceColumns';
+import { ServiceActions } from './ServiceActions';
+import { Service } from '@/types';
 
 const sampleServices: Service[] = [
   {
@@ -34,6 +32,8 @@ const sampleServices: Service[] = [
 const AdminServices = () => {
   const [services, setServices] = useState<Service[]>(sampleServices);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   
   const handleAddService = (name: string, description: string) => {
     const newService: Service = {
@@ -47,6 +47,24 @@ const AdminServices = () => {
     toast.success(`${name} service has been added`);
   };
   
+  const handleEditService = (service: Service) => {
+    setSelectedService(service);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleSaveService = (updatedService: Service) => {
+    setServices(services.map(service => 
+      service.id === updatedService.id ? updatedService : service
+    ));
+    setIsEditDialogOpen(false);
+    toast.success(`${updatedService.name} has been updated`);
+  };
+  
+  const handleDeleteService = (service: Service) => {
+    setServices(services.filter(s => s.id !== service.id));
+    toast.success(`${service.name} has been deleted`);
+  };
+  
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
@@ -58,23 +76,29 @@ const AdminServices = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {services.map((service) => (
-            <Card key={service.id}>
-              <CardHeader>
-                <CardTitle>{service.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{service.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DataTable 
+          columns={ServiceColumns} 
+          data={services}
+          actions={(service) => (
+            <ServiceActions 
+              service={service as Service} 
+              onEdit={handleEditService} 
+              onDelete={handleDeleteService} 
+            />
+          )}
+        />
         
         <AddServiceDialog
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
           onAddService={handleAddService}
+        />
+        
+        <EditServiceDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSave={handleSaveService}
+          service={selectedService}
         />
       </div>
     </AppLayout>
