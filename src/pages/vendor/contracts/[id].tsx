@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -108,7 +109,8 @@ const ContractDetails = () => {
             </div>
 
             <div className="mt-6">
-              <Button variant="outline" className="w-full" leftIcon={<FileText className="h-4 w-4" />}>
+              <Button variant="outline" className="w-full">
+                <FileText className="h-4 w-4 mr-2" />
                 View Contract Document
               </Button>
             </div>
