@@ -3,12 +3,11 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Contract, Column } from "@/types";
 import { sampleContracts } from "@/data/sampleData";
-import { Search, Plus, FileText, Download, Filter } from "lucide-react";
+import { FileText, Download, Filter } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Select, 
   SelectContent, 
@@ -148,10 +147,11 @@ interface FilterValues {
   vendor: string;
   minValue: string;
   maxValue: string;
+  startDate: string;
+  endDate: string;
 }
 
 const AdminContracts = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>(sampleContracts);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -167,23 +167,15 @@ const AdminContracts = () => {
       agent: "",
       vendor: "",
       minValue: "",
-      maxValue: ""
+      maxValue: "",
+      startDate: "",
+      endDate: ""
     }
   });
 
-  // Apply filters and search
+  // Apply filters
   const applyFilters = (values: FilterValues) => {
     let result = [...sampleContracts];
-    
-    // Apply search filter
-    if (searchQuery) {
-      result = result.filter(contract => 
-        contract.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        contract.agentName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        contract.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        contract.status.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
     
     // Apply status filter
     if (values.status) {
@@ -209,20 +201,24 @@ const AdminContracts = () => {
       result = result.filter(contract => contract.value <= Number(values.maxValue));
     }
     
+    // Apply date range filter
+    if (values.startDate) {
+      const startDate = new Date(values.startDate);
+      result = result.filter(contract => new Date(contract.createdAt) >= startDate);
+    }
+    
+    if (values.endDate) {
+      const endDate = new Date(values.endDate);
+      result = result.filter(contract => new Date(contract.createdAt) <= endDate);
+    }
+    
     setFilteredContracts(result);
     setIsFilterOpen(false);
-  };
-  
-  // Handle search input changes
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    applyFilters(form.getValues());
   };
   
   // Reset filters
   const resetFilters = () => {
     form.reset();
-    setSearchQuery("");
     setFilteredContracts(sampleContracts);
     setIsFilterOpen(false);
   };
@@ -239,7 +235,6 @@ const AdminContracts = () => {
             <h1 className="text-3xl font-bold tracking-tight">Contracts</h1>
             <p className="text-muted-foreground">Manage and view all contracts</p>
           </div>
-          
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -305,16 +300,6 @@ const AdminContracts = () => {
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search contracts..." 
-                  className="pl-8" 
-                  value={searchQuery} 
-                  onChange={handleSearchChange} 
-                />
-              </div>
-              
               <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline">
@@ -419,9 +404,10 @@ const AdminContracts = () => {
                             <FormItem>
                               <FormLabel>Min Value</FormLabel>
                               <FormControl>
-                                <Input 
+                                <input 
                                   type="number" 
                                   placeholder="Min value" 
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                   {...field} 
                                 />
                               </FormControl>
@@ -436,9 +422,46 @@ const AdminContracts = () => {
                             <FormItem>
                               <FormLabel>Max Value</FormLabel>
                               <FormControl>
-                                <Input 
+                                <input 
                                   type="number" 
                                   placeholder="Max value" 
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  {...field} 
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <FormControl>
+                                <input 
+                                  type="date" 
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  {...field} 
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="endDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <FormControl>
+                                <input 
+                                  type="date" 
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                   {...field} 
                                 />
                               </FormControl>

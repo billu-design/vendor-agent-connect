@@ -85,11 +85,14 @@ export function Sidebar() {
     setIsLogoutDialogOpen(false);
   };
   
+  // Determine the sidebar title based on user role
+  const sidebarTitle = user.role === 'admin' ? 'ADMIN-CONNECT' : 'VENDOR-CONNECT';
+  
   return <>
       <aside className="h-screen w-64 border-r border-border/40 p-6 bg-card/50 flex flex-col fixed left-0 animate-fade-in">
         <div className="flex items-center justify-center mb-8">
-          <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400 text-xl mx-[4px] my-0">
-            ATS Web Portal
+          <span className="font-bold text-xl mx-[4px] my-0">
+            {sidebarTitle}
           </span>
         </div>
         
