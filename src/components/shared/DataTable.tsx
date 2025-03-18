@@ -13,9 +13,10 @@ interface DataTableProps {
   actions?: (record: any) => React.ReactNode;
   pageSize?: number;
   searchKey?: string;
+  isLoading?: boolean; // Added the isLoading prop to the interface
 }
 
-export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: DataTableProps) {
+export function DataTable({ columns, data, actions, pageSize = 10, searchKey, isLoading }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -88,53 +89,57 @@ export function DataTable({ columns, data, actions, pageSize = 10, searchKey }: 
       </div>
       
       <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead 
-                  key={getColumnKey(column) || columns.indexOf(column).toString()}
-                  onClick={() => column.sortable && handleSort(getColumnKey(column))}
-                  className={column.sortable ? "cursor-pointer hover:text-primary" : ""}
-                >
-                  <div className="flex items-center">
-                    {column.header}
-                    {column.sortable && renderSortIcon(getColumnKey(column))}
-                  </div>
-                </TableHead>
-              ))}
-              {actions && <TableHead className="text-right">Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 text-center text-muted-foreground">Loading data...</div>
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-6 text-muted-foreground">
-                  No data found
-                </TableCell>
+                {columns.map((column) => (
+                  <TableHead 
+                    key={getColumnKey(column) || columns.indexOf(column).toString()}
+                    onClick={() => column.sortable && handleSort(getColumnKey(column))}
+                    className={column.sortable ? "cursor-pointer hover:text-primary" : ""}
+                  >
+                    <div className="flex items-center">
+                      {column.header}
+                      {column.sortable && renderSortIcon(getColumnKey(column))}
+                    </div>
+                  </TableHead>
+                ))}
+                {actions && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
-            ) : (
-              paginatedData.map((record, index) => (
-                <TableRow key={record.id || index} className="group hover:bg-muted/50">
-                  {columns.map((column, colIndex) => (
-                    <TableCell key={`${record.id || index}-${getColumnKey(column) || colIndex}`}>
-                      {column.cell ? (
-                        column.cell({ row: { original: record } })
-                      ) : column.render ? (
-                        column.render(getCellValue(record, column), record)
-                      ) : isStatusColumn(column) ? (
-                        <StatusBadge status={getCellValue(record, column)} />
-                      ) : (
-                        getCellValue(record, column)
-                      )}
-                    </TableCell>
-                  ))}
-                  {actions && <TableCell className="text-right">{actions(record)}</TableCell>}
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-6 text-muted-foreground">
+                    No data found
+                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                paginatedData.map((record, index) => (
+                  <TableRow key={record.id || index} className="group hover:bg-muted/50">
+                    {columns.map((column, colIndex) => (
+                      <TableCell key={`${record.id || index}-${getColumnKey(column) || colIndex}`}>
+                        {column.cell ? (
+                          column.cell({ row: { original: record } })
+                        ) : column.render ? (
+                          column.render(getCellValue(record, column), record)
+                        ) : isStatusColumn(column) ? (
+                          <StatusBadge status={getCellValue(record, column)} />
+                        ) : (
+                          getCellValue(record, column)
+                        )}
+                      </TableCell>
+                    ))}
+                    {actions && <TableCell className="text-right">{actions(record)}</TableCell>}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
       
       {totalPages > 1 && (
