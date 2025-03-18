@@ -35,7 +35,7 @@ export function Header() {
   return <header className="w-full h-16 border-b border-border/40 backdrop-blur-sm bg-background/90 flex items-center px-6 justify-between sticky top-0 z-50 animate-fade-in">
       <div className="flex items-center gap-2">
         <h1 className="text-xl font-semibold tracking-tight mx-[16px]">
-          {user && user.role === 'admin' ? 'ADMIN-CONNECT' : 'VENDOR-CONNECT'}
+          ATS Web Portal
         </h1>
       </div>
       

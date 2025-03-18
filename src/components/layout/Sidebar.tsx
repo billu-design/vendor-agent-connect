@@ -89,7 +89,7 @@ export function Sidebar() {
       <aside className="h-screen w-64 border-r border-border/40 p-6 bg-card/50 flex flex-col fixed left-0 animate-fade-in">
         <div className="flex items-center justify-center mb-8">
           <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400 text-xl mx-[4px] my-0">
-            {user.role === 'admin' ? 'ADMIN-CONNECT' : 'VENDOR-CONNECT'}
+            ATS Web Portal
           </span>
         </div>
         

@@ -51,11 +51,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = useCallback(() => {
-    // Clear user data from localStorage first
+    // Clear all auth-related state and storage
     localStorage.removeItem('user');
-    
-    // Update state immediately
     setUser(null);
+    
+    // Ensure the page has time to process the state change
+    // Force a clean reload of the app
+    window.location.href = '/login';
+    
     toast.success('Logged out successfully');
   }, []);
 

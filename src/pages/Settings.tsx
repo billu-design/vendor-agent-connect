@@ -1,155 +1,162 @@
 
-import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Shield, Smartphone, Globe } from "lucide-react";
+import { useState } from 'react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
+// Password change form schema
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const Settings = () => {
+  const { user } = useAuth();
+  
+  // Password change form
+  const form = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
+  const onSubmit = (values: PasswordFormValues) => {
+    // Simulate password change process
+    setTimeout(() => {
+      toast.success('Password changed successfully');
+      form.reset();
+    }, 1000);
+  };
+
+  if (!user) return null;
+
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto animate-fade-in">
-        <h1 className="text-3xl font-bold tracking-tight mb-6">Settings</h1>
-        
-        <Tabs defaultValue="notifications" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-md">
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground">Manage your account settings</p>
+        </div>
+
+        <Tabs defaultValue="account" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="notifications" className="space-y-4">
+
+          <TabsContent value="account" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Bell className="h-5 w-5 text-primary" />
-                  <CardTitle>Notifications</CardTitle>
-                </div>
-                <CardDescription>Manage how you receive notifications</CardDescription>
+                <CardTitle>Account Information</CardTitle>
+                <CardDescription>Update your account details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="new-contract" className="flex flex-col space-y-1">
-                    <span>New Contracts</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Receive notifications when a new contract is created
-                    </span>
-                  </Label>
-                  <Switch id="new-contract" defaultChecked />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" defaultValue={user.name} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" defaultValue={user.email} disabled />
+                    <p className="text-xs text-muted-foreground">You cannot change your email.</p>
+                  </div>
                 </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="contract-updates" className="flex flex-col space-y-1">
-                    <span>Contract Updates</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Get notified when contracts are modified
-                    </span>
-                  </Label>
-                  <Switch id="contract-updates" defaultChecked />
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Input id="bio" defaultValue={user.bio || ''} placeholder="Tell us about yourself" />
                 </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="messages" className="flex flex-col space-y-1">
-                    <span>Messages</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Receive notifications for new messages
-                    </span>
-                  </Label>
-                  <Switch id="messages" defaultChecked />
+                <div className="flex justify-end">
+                  <Button>Save Changes</Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="appearance" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Globe className="h-5 w-5 text-primary" />
-                  <CardTitle>Appearance</CardTitle>
-                </div>
-                <CardDescription>Customize how the application looks</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
-                    <span>Dark Mode</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Toggle between light and dark mode
-                    </span>
-                  </Label>
-                  <Switch id="dark-mode" />
-                </div>
-                
-                <div className="mt-6">
-                  <Button variant="outline">Reset to Defaults</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
+
           <TabsContent value="security" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <CardTitle>Security</CardTitle>
-                </div>
-                <CardDescription>Manage your account security</CardDescription>
+                <CardTitle>Change Password</CardTitle>
+                <CardDescription>Update your password</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="two-factor" className="flex flex-col space-y-1">
-                    <span>Two-Factor Authentication</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Add an extra layer of security to your account
-                    </span>
-                  </Label>
-                  <Switch id="two-factor" />
-                </div>
-                
-                <Separator />
-                
-                <div className="mt-6 space-y-2">
-                  <Button variant="outline">Change Password</Button>
-                </div>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex justify-end">
+                      <Button type="submit">Change Password</Button>
+                    </div>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="advanced" className="space-y-4">
+
+          <TabsContent value="notifications" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Smartphone className="h-5 w-5 text-primary" />
-                  <CardTitle>Advanced Settings</CardTitle>
-                </div>
-                <CardDescription>Configure advanced settings</CardDescription>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>Configure how you receive notifications</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="api-access" className="flex flex-col space-y-1">
-                    <span>API Access</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Enable API access to your account
-                    </span>
-                  </Label>
-                  <Switch id="api-access" />
-                </div>
-                
-                <Separator />
-                
-                <div className="mt-6">
-                  <Button variant="outline">Export Data</Button>
-                </div>
+              <CardContent>
+                <p className="text-muted-foreground">Notification settings will be added in a future update.</p>
               </CardContent>
             </Card>
           </TabsContent>

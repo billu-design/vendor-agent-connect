@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -13,17 +13,16 @@ interface AppLayoutProps {
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     if (!loading && requireAuth && !user) {
-      // Navigate with a small delay to ensure context update completes
-      const timer = setTimeout(() => {
-        navigate('/login');
-      }, 50); // Increased delay to ensure context propagation
-      
-      return () => clearTimeout(timer);
+      // Navigate to login page if not authenticated
+      if (location.pathname !== '/login') {
+        navigate('/login', { replace: true });
+      }
     }
-  }, [loading, requireAuth, user, navigate]);
+  }, [loading, requireAuth, user, navigate, location.pathname]);
   
   if (loading) {
     return (

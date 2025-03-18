@@ -1,3 +1,4 @@
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
@@ -5,9 +6,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Contract, Column } from "@/types";
 import { sampleContracts } from "@/data/sampleData";
-import { Search, Plus, FileText, Download } from "lucide-react";
+import { Search, Plus, FileText, Download, Filter } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel 
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 // Define columns for the contracts table
 const columns: Column[] = [{
@@ -119,16 +140,98 @@ const columns: Column[] = [{
         </Button>
       </div>
 }];
+
+// Define the filter form interface
+interface FilterValues {
+  status: string;
+  agent: string;
+  vendor: string;
+  minValue: string;
+  maxValue: string;
+}
+
 const AdminContracts = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filteredContracts, setFilteredContracts] = useState<Contract[]>(sampleContracts);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Filter contracts based on search query
-  const filteredContracts = sampleContracts.filter(contract => contract.title.toLowerCase().includes(searchQuery.toLowerCase()) || contract.agentName.toLowerCase().includes(searchQuery.toLowerCase()) || contract.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) || contract.status.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Get unique agents and vendors for filter options
+  const agents = Array.from(new Set(sampleContracts.map(c => c.agentName)));
+  const vendors = Array.from(new Set(sampleContracts.map(c => c.vendorName)));
+  const statuses = Array.from(new Set(sampleContracts.map(c => c.status)));
+
+  // Setup filter form
+  const form = useForm<FilterValues>({
+    defaultValues: {
+      status: "",
+      agent: "",
+      vendor: "",
+      minValue: "",
+      maxValue: ""
+    }
+  });
+
+  // Apply filters and search
+  const applyFilters = (values: FilterValues) => {
+    let result = [...sampleContracts];
+    
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(contract => 
+        contract.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        contract.agentName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        contract.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        contract.status.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply status filter
+    if (values.status) {
+      result = result.filter(contract => contract.status === values.status);
+    }
+    
+    // Apply agent filter
+    if (values.agent) {
+      result = result.filter(contract => contract.agentName === values.agent);
+    }
+    
+    // Apply vendor filter
+    if (values.vendor) {
+      result = result.filter(contract => contract.vendorName === values.vendor);
+    }
+    
+    // Apply value range filter
+    if (values.minValue) {
+      result = result.filter(contract => contract.value >= Number(values.minValue));
+    }
+    
+    if (values.maxValue) {
+      result = result.filter(contract => contract.value <= Number(values.maxValue));
+    }
+    
+    setFilteredContracts(result);
+    setIsFilterOpen(false);
+  };
+  
+  // Handle search input changes
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    applyFilters(form.getValues());
+  };
+  
+  // Reset filters
+  const resetFilters = () => {
+    form.reset();
+    setSearchQuery("");
+    setFilteredContracts(sampleContracts);
+    setIsFilterOpen(false);
+  };
 
   // Calculate summary statistics
   const totalValue = filteredContracts.reduce((sum, contract) => sum + contract.value, 0);
   const activeContracts = filteredContracts.filter(c => c.status === 'signed');
   const pendingContracts = filteredContracts.filter(c => c.status === 'draft' || c.status === 'sent');
+  
   return <AppLayout>
       <div className="animate-fade-in space-y-6">
         <div className="flex justify-between items-center">
@@ -204,12 +307,163 @@ const AdminContracts = () => {
             <div className="mb-4 flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search contracts..." className="pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                <Input 
+                  placeholder="Search contracts..." 
+                  className="pl-8" 
+                  value={searchQuery} 
+                  onChange={handleSearchChange} 
+                />
               </div>
-              <Button variant="outline">Filters</Button>
+              
+              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(applyFilters)} className="space-y-4">
+                      <h3 className="font-medium mb-2">Filter Contracts</h3>
+                      
+                      <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="">All Statuses</SelectItem>
+                                {statuses.map(status => (
+                                  <SelectItem key={status} value={status}>
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="agent"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Agent</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select agent" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="">All Agents</SelectItem>
+                                {agents.map(agent => (
+                                  <SelectItem key={agent} value={agent}>
+                                    {agent}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="vendor"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Vendor</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select vendor" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="">All Vendors</SelectItem>
+                                {vendors.map(vendor => (
+                                  <SelectItem key={vendor} value={vendor}>
+                                    {vendor}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="minValue"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Min Value</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  placeholder="Min value" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="maxValue"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Max Value</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  placeholder="Max value" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-between pt-2">
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={resetFilters}
+                        >
+                          Reset
+                        </Button>
+                        <Button type="submit">Apply Filters</Button>
+                      </div>
+                    </form>
+                  </Form>
+                </PopoverContent>
+              </Popover>
             </div>
             
-            <DataTable columns={columns} data={filteredContracts} searchKey="title" />
+            <DataTable columns={columns} data={filteredContracts} />
           </CardContent>
         </Card>
       </div>
