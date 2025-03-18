@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-
 export function Sidebar() {
   const {
     user,
@@ -17,11 +15,8 @@ export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-  
   if (!user) return null;
-  
   const isActive = (path: string) => location.pathname === path;
-  
   const adminLinks = [{
     icon: Home,
     label: "Dashboard",
@@ -47,7 +42,6 @@ export function Sidebar() {
     label: "Reports",
     path: "/admin/reports"
   }];
-  
   const vendorLinks = [{
     icon: Home,
     label: "Dashboard",
@@ -61,7 +55,6 @@ export function Sidebar() {
     label: "Messages",
     path: "/vendor/messages"
   }];
-  
   let links;
   switch (user.role) {
     case 'admin':
@@ -73,25 +66,22 @@ export function Sidebar() {
     default:
       links = [];
   }
-  
   const handleLogout = () => {
     setIsLogoutDialogOpen(true);
   };
-  
   const confirmLogout = () => {
     logout();
     navigate('/login');
     toast.success('Logged out successfully');
     setIsLogoutDialogOpen(false);
   };
-  
+
   // Determine the sidebar title based on user role
   const sidebarTitle = user.role === 'admin' ? 'ADMIN-CONNECT' : 'VENDOR-CONNECT';
-  
   return <>
       <aside className="h-screen w-64 border-r border-border/40 p-6 bg-card/50 flex flex-col fixed left-0 animate-fade-in">
         <div className="flex items-center justify-center mb-8">
-          <span className="font-bold text-xl mx-[4px] my-0">
+          <span className="text-xl mx-[4px] my-0 font-bold text-blue-600">
             {sidebarTitle}
           </span>
         </div>
