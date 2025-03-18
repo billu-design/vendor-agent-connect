@@ -32,6 +32,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
+      // Check local storage for verified vendors with passwords
+      const storedVendors = localStorage.getItem('verified_vendors');
+      let verifiedVendors: Record<string, { password: string; name: string }> = {};
+      
+      if (storedVendors) {
+        verifiedVendors = JSON.parse(storedVendors);
+      }
+      
+      // Check if this is a verified vendor with password
+      if (verifiedVendors[email] && verifiedVendors[email].password === password) {
+        const vendorUser: User = {
+          id: email.split('@')[0],
+          name: verifiedVendors[email].name,
+          email: email,
+          role: 'vendor',
+          verified: true
+        };
+        
+        localStorage.setItem('user', JSON.stringify(vendorUser));
+        setUser(vendorUser);
+        toast.success(`Welcome back, ${vendorUser.name}!`);
+        return;
+      }
+      
+      // If not a verified vendor, try regular login
       const user = loginUser(email, password);
       
       if (!user) {
@@ -50,16 +75,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const completeVendorRegistration = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Get existing vendors or create new object
+      const storedVendors = localStorage.getItem('verified_vendors');
+      let verifiedVendors: Record<string, { password: string; name: string }> = {};
+      
+      if (storedVendors) {
+        verifiedVendors = JSON.parse(storedVendors);
+      }
+      
+      // Save vendor password
+      verifiedVendors[email] = { 
+        password, 
+        name: email.split('@')[0] // Simple name extraction from email
+      };
+      
+      localStorage.setItem('verified_vendors', JSON.stringify(verifiedVendors));
+      
+      // Create vendor user
+      const vendorUser: User = {
+        id: email.split('@')[0],
+        name: verifiedVendors[email].name,
+        email: email,
+        role: 'vendor',
+        verified: true
+      };
+      
+      // Set as current user
+      localStorage.setItem('user', JSON.stringify(vendorUser));
+      setUser(vendorUser);
+      
+      toast.success('Registration completed successfully!');
+    } catch (e) {
+      setError((e as Error).message);
+      toast.error('Registration failed: ' + (e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = useCallback(() => {
     // Clear all auth-related state and storage
     localStorage.removeItem('user');
     setUser(null);
     
-    // Ensure the page has time to process the state change
     // Force a clean reload of the app
     window.location.href = '/login';
-    
-    toast.success('Logged out successfully');
   }, []);
 
   const value = {
@@ -67,7 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     error,
     login,
-    logout
+    logout,
+    completeVendorRegistration
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

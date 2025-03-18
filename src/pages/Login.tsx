@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -23,32 +24,65 @@ const adminFormSchema = z.object({
   })
 });
 
-// Schema for vendor login with OTP verification step
+// Schema for vendor login
+const vendorLoginSchema = z.object({
+  email: z.string().email({
+    message: 'Please enter a valid email address'
+  }),
+  password: z.string().min(1, {
+    message: 'Password is required'
+  })
+});
+
+// Schema for vendor email OTP
 const vendorEmailSchema = z.object({
   email: z.string().email({
     message: 'Please enter a valid email address'
   })
 });
+
+// Schema for vendor OTP verification
 const vendorOtpSchema = z.object({
   otp: z.string().length(6, {
     message: 'OTP must be 6 digits'
   })
 });
+
+// Schema for vendor password setup
+const vendorPasswordSchema = z.object({
+  password: z.string().min(6, {
+    message: 'Password must be at least 6 characters'
+  }),
+  confirmPassword: z.string().min(6, {
+    message: 'Confirm password is required'
+  })
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
+});
+
 const Login = () => {
-  const {
-    login
-  } = useAuth();
+  const { login, completeVendorRegistration } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'admin' | 'vendor'>('admin');
   const [showPassword, setShowPassword] = useState(false);
-  const [vendorStep, setVendorStep] = useState<'email' | 'otp'>('email');
+  const [vendorView, setVendorView] = useState<'login' | 'email' | 'otp' | 'password'>('login');
   const [vendorEmail, setVendorEmail] = useState('');
 
   // Admin login form
   const adminForm = useForm<z.infer<typeof adminFormSchema>>({
     resolver: zodResolver(adminFormSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
+
+  // Vendor login form
+  const vendorLoginForm = useForm<z.infer<typeof vendorLoginSchema>>({
+    resolver: zodResolver(vendorLoginSchema),
     defaultValues: {
       email: '',
       password: ''
@@ -70,6 +104,16 @@ const Login = () => {
       otp: ''
     }
   });
+
+  // Vendor password setup form
+  const vendorPasswordForm = useForm<z.infer<typeof vendorPasswordSchema>>({
+    resolver: zodResolver(vendorPasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: ''
+    }
+  });
+
   const onSubmitAdmin = async (values: z.infer<typeof adminFormSchema>) => {
     setIsLoading(true);
     try {
@@ -81,13 +125,26 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  const onSubmitVendorLogin = async (values: z.infer<typeof vendorLoginSchema>) => {
+    setIsLoading(true);
+    try {
+      await login(values.email, values.password);
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Failed to login with credentials');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onSubmitVendorEmail = async (values: z.infer<typeof vendorEmailSchema>) => {
     setIsLoading(true);
     try {
       // Simulate sending OTP email
       await new Promise(resolve => setTimeout(resolve, 1500));
       setVendorEmail(values.email);
-      setVendorStep('otp');
+      setVendorView('otp');
       toast.success(`OTP sent to ${values.email}`);
     } catch (error) {
       toast.error('Failed to send OTP');
@@ -95,6 +152,7 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
   const onSubmitVendorOtp = async (values: z.infer<typeof vendorOtpSchema>) => {
     setIsLoading(true);
     try {
@@ -103,10 +161,24 @@ const Login = () => {
 
       // For demo purposes we'll consider "123456" as valid OTP
       if (values.otp === "123456") {
-        // Simulate login
-        await login(vendorEmail, "vendor-authenticated-via-otp");
-        toast.success("OTP verified successfully");
-        navigate('/dashboard');
+        // Check if this vendor has already set up a password
+        const storedVendors = localStorage.getItem('verified_vendors');
+        let verifiedVendors: Record<string, { password: string; name: string }> = {};
+        
+        if (storedVendors) {
+          verifiedVendors = JSON.parse(storedVendors);
+        }
+        
+        if (verifiedVendors[vendorEmail]) {
+          // Already has password - proceed with normal login
+          await login(vendorEmail, verifiedVendors[vendorEmail].password);
+          toast.success("Login successful!");
+          navigate('/dashboard');
+        } else {
+          // No password yet - show password setup
+          toast.success("OTP verified successfully. Please set your password.");
+          setVendorView('password');
+        }
       } else {
         toast.error("Invalid OTP, please try again");
       }
@@ -116,6 +188,24 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  const onSubmitVendorPassword = async (values: z.infer<typeof vendorPasswordSchema>) => {
+    setIsLoading(true);
+    try {
+      if (completeVendorRegistration) {
+        await completeVendorRegistration(vendorEmail, values.password);
+        toast.success("Password set successfully!");
+        navigate('/dashboard');
+      } else {
+        throw new Error("Registration function not available");
+      }
+    } catch (error) {
+      toast.error('Failed to set password');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
@@ -131,15 +221,23 @@ const Login = () => {
     }
   };
 
-  // Set demo credentials based on active tab
+  // Set demo credentials based on active tab and view
   const setDemoCredentials = () => {
     if (activeTab === 'admin') {
       adminForm.setValue('email', 'admin@example.com');
       adminForm.setValue('password', 'password');
-    } else if (activeTab === 'vendor' && vendorStep === 'email') {
-      vendorEmailForm.setValue('email', 'vendor@example.com');
-    } else if (activeTab === 'vendor' && vendorStep === 'otp') {
-      vendorOtpForm.setValue('otp', '123456');
+    } else if (activeTab === 'vendor') {
+      if (vendorView === 'login') {
+        vendorLoginForm.setValue('email', 'vendor@example.com');
+        vendorLoginForm.setValue('password', 'password');
+      } else if (vendorView === 'email') {
+        vendorEmailForm.setValue('email', 'vendor@example.com');
+      } else if (vendorView === 'otp') {
+        vendorOtpForm.setValue('otp', '123456');
+      } else if (vendorView === 'password') {
+        vendorPasswordForm.setValue('password', 'password');
+        vendorPasswordForm.setValue('confirmPassword', 'password');
+      }
     }
   };
 
@@ -147,7 +245,7 @@ const Login = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'admin' | 'vendor');
     if (value === 'vendor') {
-      setVendorStep('email');
+      setVendorView('login');
     }
   };
 
@@ -164,6 +262,7 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
   return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <div className="w-full max-w-md animate-scale-in">
         <div className="text-center mb-8">
@@ -177,10 +276,17 @@ const Login = () => {
           <div className="h-1 bg-gradient-to-r from-primary to-blue-400"></div>
           <CardHeader className="pb-2">
             <CardTitle className="text-2xl">
-              {activeTab === 'admin' ? 'Admin Login' : 'Vendor Login'}
+              {activeTab === 'admin' ? 'Admin Login' : 
+               vendorView === 'login' ? 'Vendor Login' :
+               vendorView === 'email' ? 'Vendor Email Verification' :
+               vendorView === 'otp' ? 'OTP Verification' : 'Set Password'}
             </CardTitle>
             <CardDescription className="text-sm">
-              {activeTab === 'admin' ? 'Sign in to manage vendors and contracts' : vendorStep === 'email' ? 'Enter your email to receive a verification code' : 'Enter the verification code sent to your email'}
+              {activeTab === 'admin' ? 'Sign in to manage vendors and contracts' : 
+               vendorView === 'login' ? 'Sign in with your email and password' :
+               vendorView === 'email' ? 'Enter your email to receive a verification code' : 
+               vendorView === 'otp' ? 'Enter the verification code sent to your email' :
+               'Create a password for your account'}
             </CardDescription>
             
             <Tabs defaultValue="admin" className="w-full mt-4" onValueChange={handleTabChange} value={activeTab}>
@@ -195,11 +301,14 @@ const Login = () => {
             </Tabs>
           </CardHeader>
           <CardContent className="pt-4">
-            {activeTab === 'admin' ? <Form {...adminForm}>
+            {activeTab === 'admin' ? (
+              <Form {...adminForm}>
                 <form onSubmit={adminForm.handleSubmit(onSubmitAdmin)} className="space-y-4">
-                  <FormField control={adminForm.control} name="email" render={({
-                field
-              }) => <FormItem>
+                  <FormField
+                    control={adminForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <div className="relative">
@@ -208,33 +317,136 @@ const Login = () => {
                           </div>
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
-                  <FormField control={adminForm.control} name="password" render={({
-                field
-              }) => <FormItem>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={adminForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                            <Input type={showPassword ? "text" : "password"} className="pl-10 pr-10" placeholder="••••••••" {...field} />
-                            <button type="button" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" onClick={() => setShowPassword(!showPassword)}>
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              className="pl-10 pr-10"
+                              placeholder="••••••••"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
                               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
                           </div>
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit" className="w-full group relative overflow-hidden" disabled={isLoading}>
-                    {isLoading ? <span className="flex items-center gap-2">
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></span>
                         Signing in...
-                      </span> : <>
+                      </span>
+                    ) : (
+                      <>
                         <span>Sign in as Admin</span>
                         <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4" />
-                      </>}
+                      </>
+                    )}
                   </Button>
                 </form>
-              </Form> : vendorStep === 'email' ? <>
+              </Form>
+            ) : vendorView === 'login' ? (
+              <div className="space-y-6">
+                <Form {...vendorLoginForm}>
+                  <form onSubmit={vendorLoginForm.handleSubmit(onSubmitVendorLogin)} className="space-y-4">
+                    <FormField
+                      control={vendorLoginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <Input className="pl-10" placeholder="vendor@example.com" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={vendorLoginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <Input
+                                type={showPassword ? "text" : "password"}
+                                className="pl-10 pr-10"
+                                placeholder="••••••••"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full group relative overflow-hidden" disabled={isLoading}>
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></span>
+                          Signing in...
+                        </span>
+                      ) : (
+                        <>
+                          <span>Sign in</span>
+                          <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="w-full" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  variant="outline"
+                  type="button" 
+                  className="w-full"
+                  onClick={() => setVendorView('email')}
+                >
+                  Verify with Email OTP
+                </Button>
+              </div>
+            ) : vendorView === 'email' ? (
+              <>
                 <Button variant="outline" type="button" className="w-full flex gap-2 mb-6 relative overflow-hidden group" disabled={isGoogleLoading} onClick={handleGoogleLogin}>
                   <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                     <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335" />
@@ -261,28 +473,42 @@ const Login = () => {
                   <form onSubmit={vendorEmailForm.handleSubmit(onSubmitVendorEmail)} className="space-y-4">
                     <FormField control={vendorEmailForm.control} name="email" render={({
                   field
-                }) => <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                              <Input className="pl-10" placeholder="vendor@example.com" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
+                }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input className="pl-10" placeholder="vendor@example.com" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
                     <Button type="submit" className="w-full group relative overflow-hidden" disabled={isLoading}>
-                      {isLoading ? <span className="flex items-center gap-2">
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
                           <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></span>
                           Sending OTP...
-                        </span> : <>
+                        </span>
+                      ) : (
+                        <>
                           <Send className="w-4 h-4 mr-2" />
                           <span>Send Verification Code</span>
-                        </>}
+                        </>
+                      )}
                     </Button>
                   </form>
                 </Form>
-              </> : <Form {...vendorOtpForm}>
+                
+                <div className="text-center mt-4">
+                  <Button variant="link" className="text-sm p-0" onClick={() => setVendorView('login')}>
+                    Back to login
+                  </Button>
+                </div>
+              </>
+            ) : vendorView === 'otp' ? (
+              <Form {...vendorOtpForm}>
                 <form onSubmit={vendorOtpForm.handleSubmit(onSubmitVendorOtp)} className="space-y-4">
                   <div className="mb-4 text-center">
                     <div className="text-sm font-medium text-primary mb-2">Verification Code Sent</div>
@@ -293,26 +519,38 @@ const Login = () => {
                   
                   <FormField control={vendorOtpForm.control} name="otp" render={({
                 field
-              }) => <FormItem>
-                        <FormLabel>Enter 6-Digit Code</FormLabel>
-                        <FormControl>
-                          <Input className="text-center tracking-[0.5em] font-mono text-lg" maxLength={6} inputMode="numeric" autoComplete="one-time-code" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
+              }) => (
+                    <FormItem>
+                      <FormLabel>Enter 6-Digit Code</FormLabel>
+                      <FormControl>
+                        <Input 
+                          className="text-center tracking-[0.5em] font-mono text-lg" 
+                          maxLength={6} 
+                          inputMode="numeric" 
+                          autoComplete="one-time-code" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                   
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? <span className="flex items-center gap-2">
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></span>
                         Verifying...
-                      </span> : <>
+                      </span>
+                    ) : (
+                      <>
                         <Check className="w-4 h-4 mr-2" />
-                        <span>Verify and Sign In</span>
-                      </>}
+                        <span>Verify Code</span>
+                      </>
+                    )}
                   </Button>
                   
                   <div className="text-center mt-4">
-                    <Button variant="link" type="button" className="text-sm" onClick={() => setVendorStep('email')}>
+                    <Button variant="link" type="button" className="text-sm" onClick={() => setVendorView('email')}>
                       Use a different email
                     </Button>
                     <span className="text-muted-foreground mx-2">•</span>
@@ -321,18 +559,96 @@ const Login = () => {
                     </Button>
                   </div>
                 </form>
-              </Form>}
+              </Form>
+            ) : (
+              <Form {...vendorPasswordForm}>
+                <form onSubmit={vendorPasswordForm.handleSubmit(onSubmitVendorPassword)} className="space-y-4">
+                  <div className="mb-4 text-center">
+                    <div className="text-sm font-medium text-primary mb-2">Set Your Password</div>
+                    <div className="text-sm text-muted-foreground">
+                      Create a password for your account
+                    </div>
+                  </div>
+                  
+                  <FormField
+                    control={vendorPasswordForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              className="pl-10 pr-10"
+                              placeholder="••••••••"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={vendorPasswordForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              className="pl-10"
+                              placeholder="••••••••"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></span>
+                        Setting password...
+                      </span>
+                    ) : (
+                      <span>Complete Registration</span>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-2 bg-muted/30">
             <div className="text-sm text-muted-foreground text-center w-full mb-1">
               For demo purposes, click to auto-fill:
             </div>
             <Button variant="ghost" size="sm" className="w-full text-primary hover:text-primary/90" onClick={setDemoCredentials}>
-              Use {activeTab === 'admin' ? 'Admin' : vendorStep === 'email' ? 'Vendor Email' : 'OTP'} Demo Credentials
+              Use {activeTab === 'admin' ? 'Admin' : 
+                   vendorView === 'login' ? 'Vendor Login' :
+                   vendorView === 'email' ? 'Vendor Email' : 
+                   vendorView === 'otp' ? 'OTP' : 'Password'} Demo Credentials
             </Button>
           </CardFooter>
         </Card>
       </div>
     </div>;
 };
+
 export default Login;

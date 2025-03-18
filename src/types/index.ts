@@ -1,3 +1,4 @@
+
 export type Role = 'admin' | 'vendor';
 
 export interface User {
@@ -6,6 +7,8 @@ export interface User {
   email: string;
   role: Role;
   avatar?: string;
+  password?: string;
+  verified?: boolean;
 }
 
 export interface Agent {
@@ -23,12 +26,16 @@ export interface Agent {
 export interface Vendor {
   id: string;
   name: string;
+  companyName?: string;
   email: string;
   phone: string;
   status: 'active' | 'inactive';
   type: string;
   location: string;
   joinDate: string;
+  password?: string;
+  verified?: boolean;
+  serviceTypes?: string[];
 }
 
 export interface Contract {
@@ -58,6 +65,7 @@ export interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  completeVendorRegistration?: (email: string, password: string) => Promise<void>;
 }
 
 export interface Column {
