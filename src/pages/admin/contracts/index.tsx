@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { Contract } from "@/types";
+
 const Contracts = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +28,7 @@ const Contracts = () => {
     maxValue: 100000,
     dateRange: "all"
   });
+
   const {
     contracts,
     isLoading,
@@ -35,24 +37,17 @@ const Contracts = () => {
     handleDeleteContract
   } = useContractsData();
 
-  // Apply filters to contracts
   const filteredContracts = contracts.filter(contract => {
-    // Search term filter
     const matchesSearch = contract.title.toLowerCase().includes(searchTerm.toLowerCase()) || contract.agentName.toLowerCase().includes(searchTerm.toLowerCase()) || contract.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) || contract.status.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Status filter
     const matchesStatus = !filterOptions.status || contract.status === filterOptions.status;
 
-    // Agent filter
     const matchesAgent = !filterOptions.agentId || contract.agentId === filterOptions.agentId;
 
-    // Vendor filter
     const matchesVendor = !filterOptions.vendorId || contract.vendorId === filterOptions.vendorId;
 
-    // Value range filter
     const matchesValue = contract.value >= filterOptions.minValue && contract.value <= filterOptions.maxValue;
 
-    // Date range filter
     let matchesDate = true;
     const contractDate = new Date(contract.createdAt);
     const now = new Date();
@@ -69,7 +64,6 @@ const Contracts = () => {
     return matchesSearch && matchesStatus && matchesAgent && matchesVendor && matchesValue && matchesDate;
   });
 
-  // Count active filters
   const countActiveFilters = () => {
     let count = 0;
     if (filterOptions.status) count++;
@@ -81,7 +75,6 @@ const Contracts = () => {
   };
   const activeFilterCount = countActiveFilters();
 
-  // Reset all filters
   const handleResetFilters = () => {
     setFilterOptions({
       status: "",
@@ -94,7 +87,6 @@ const Contracts = () => {
     toast.success("Filters have been reset");
   };
 
-  // Format currency for display
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -103,21 +95,21 @@ const Contracts = () => {
       maximumFractionDigits: 0
     }).format(value);
   };
+
   return <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Contracts</h1>
-            <p className="text-muted-foreground">Manage and track all contracts</p>
+            <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+            <p className="text-muted-foreground">Manage and track all orders</p>
           </div>
-          
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl">{contracts.filter(c => c.status === "signed").length}</CardTitle>
-              <CardDescription>Active Contracts</CardDescription>
+              <CardDescription>Active Orders</CardDescription>
             </CardHeader>
           </Card>
           
@@ -138,8 +130,8 @@ const Contracts = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>All Contracts</CardTitle>
-            <CardDescription>View and manage all contract details</CardDescription>
+            <CardTitle>All Orders</CardTitle>
+            <CardDescription>View and manage all order details</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex justify-between items-center mb-6">
@@ -157,9 +149,9 @@ const Contracts = () => {
                 </SheetTrigger>
                 <SheetContent className="overflow-y-auto">
                   <SheetHeader>
-                    <SheetTitle>Filter Contracts</SheetTitle>
+                    <SheetTitle>Filter Orders</SheetTitle>
                     <SheetDescription>
-                      Apply filters to narrow down the contracts list
+                      Apply filters to narrow down the orders list
                     </SheetDescription>
                   </SheetHeader>
                   
@@ -218,7 +210,7 @@ const Contracts = () => {
                     
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <Label>Contract Value</Label>
+                        <Label>Order Value</Label>
                         <span className="text-sm text-muted-foreground">
                           {formatCurrency(filterOptions.minValue)} - {formatCurrency(filterOptions.maxValue)}
                         </span>
@@ -256,10 +248,11 @@ const Contracts = () => {
               </Sheet>
             </div>
             
-            <DataTable columns={ContractsColumns} data={filteredContracts} isLoading={isLoading} actions={(contract: Contract) => <ContractActions contract={contract} onViewContract={contract => navigate(`/admin/contracts/${contract.id}`)} onDeleteContract={handleDeleteContract} />} />
+            <DataTable columns={ContractsColumns} data={filteredContracts} isLoading={isLoading} actions={(contract: Contract) => <ContractActions contract={contract} onViewContract={contract => navigate(`/admin/orders/${contract.id}`)} onDeleteContract={handleDeleteContract} />} />
           </CardContent>
         </Card>
       </div>
     </AppLayout>;
 };
+
 export default Contracts;

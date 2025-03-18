@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 export function Sidebar() {
   const {
     user,
@@ -15,8 +16,11 @@ export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+
   if (!user) return null;
+
   const isActive = (path: string) => location.pathname === path;
+
   const adminLinks = [{
     icon: Home,
     label: "Dashboard",
@@ -42,19 +46,17 @@ export function Sidebar() {
     label: "Reports",
     path: "/admin/reports"
   }];
+
   const vendorLinks = [{
     icon: Home,
     label: "Dashboard",
     path: "/dashboard"
   }, {
     icon: FileText,
-    label: "Contracts",
+    label: "Orders",
     path: "/vendor/contracts"
-  }, {
-    icon: Mail,
-    label: "Messages",
-    path: "/vendor/messages"
   }];
+
   let links;
   switch (user.role) {
     case 'admin':
@@ -66,9 +68,11 @@ export function Sidebar() {
     default:
       links = [];
   }
+
   const handleLogout = () => {
     setIsLogoutDialogOpen(true);
   };
+
   const confirmLogout = () => {
     logout();
     navigate('/login');
@@ -76,8 +80,8 @@ export function Sidebar() {
     setIsLogoutDialogOpen(false);
   };
 
-  // Determine the sidebar title based on user role
   const sidebarTitle = user.role === 'admin' ? 'ADMIN-CONNECT' : 'VENDOR-CONNECT';
+
   return <>
       <aside className="h-screen w-64 border-r border-border/40 p-6 bg-card/50 flex flex-col fixed left-0 animate-fade-in">
         <div className="flex items-center justify-center mb-8">
@@ -87,7 +91,7 @@ export function Sidebar() {
         </div>
         
         <nav className="space-y-1 flex-1">
-          {links.map(link => <Button key={link.path} variant={isActive(link.path) ? "secondary" : "ghost"} className={cn("w-full justify-start mb-1 group transition-all", isActive(link.path) ? "bg-secondary font-medium" : "text-muted-foreground hover:text-foreground")} onClick={() => navigate(link.path)}>
+          {links.map(link => <Button key={link.path} variant={isActive(link.path) ? "secondary" : "ghost"} className={cn("w-full justify-start mb-1 group transition-all", isActive(link.path) ? "bg-secondary font-medium" : "text-muted-foreground")} onClick={() => navigate(link.path)}>
               <link.icon className={cn("mr-3 h-5 w-5", isActive(link.path) ? "text-primary animate-slide-up" : "text-muted-foreground group-hover:text-foreground")} />
               {link.label}
             </Button>)}

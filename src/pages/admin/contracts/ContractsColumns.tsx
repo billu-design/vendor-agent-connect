@@ -6,7 +6,7 @@ import { Column } from '@/types';
 export const ContractsColumns: Column[] = [
   {
     accessorKey: 'title',
-    header: 'Contract Title',
+    header: 'Order Title',
     sortable: true,
   },
   {
