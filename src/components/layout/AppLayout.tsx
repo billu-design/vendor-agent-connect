@@ -19,7 +19,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
       // Navigate with a small delay to ensure context update completes
       const timer = setTimeout(() => {
         navigate('/login');
-      }, 0);
+      }, 50); // Increased delay to ensure context propagation
       
       return () => clearTimeout(timer);
     }

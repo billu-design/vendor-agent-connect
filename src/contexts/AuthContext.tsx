@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { AuthContextType, User } from '@/types';
 import { loginUser } from '@/data/sampleData';
 import { toast } from 'sonner';
@@ -50,14 +50,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     // Clear user data from localStorage first
     localStorage.removeItem('user');
     
     // Update state immediately
     setUser(null);
     toast.success('Logged out successfully');
-  };
+  }, []);
 
   const value = {
     user,

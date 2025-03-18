@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -35,35 +35,44 @@ const AdminServices = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   
-  const handleAddService = (name: string, description: string) => {
+  const handleAddService = useCallback((name: string, description: string) => {
     const newService: Service = {
       id: (services.length + 1).toString(),
       name,
       description
     };
     
-    setServices([...services, newService]);
+    setServices(prev => [...prev, newService]);
     setIsAddDialogOpen(false);
     toast.success(`${name} service has been added`);
-  };
+  }, [services.length]);
   
-  const handleEditService = (service: Service) => {
+  const handleEditService = useCallback((service: Service) => {
     setSelectedService(service);
     setIsEditDialogOpen(true);
-  };
+  }, []);
   
-  const handleSaveService = (updatedService: Service) => {
-    setServices(services.map(service => 
-      service.id === updatedService.id ? updatedService : service
-    ));
+  const handleSaveService = useCallback((updatedService: Service) => {
+    setServices(prev => 
+      prev.map(service => service.id === updatedService.id ? updatedService : service)
+    );
     setIsEditDialogOpen(false);
+    setSelectedService(null);
     toast.success(`${updatedService.name} has been updated`);
-  };
+  }, []);
   
-  const handleDeleteService = (service: Service) => {
-    setServices(services.filter(s => s.id !== service.id));
+  const handleDeleteService = useCallback((service: Service) => {
+    setServices(prev => prev.filter(s => s.id !== service.id));
     toast.success(`${service.name} has been deleted`);
-  };
+  }, []);
+  
+  const renderActions = useCallback((service: any) => (
+    <ServiceActions 
+      service={service as Service} 
+      onEdit={handleEditService} 
+      onDelete={handleDeleteService}
+    />
+  ), [handleEditService, handleDeleteService]);
   
   return (
     <AppLayout>
@@ -79,27 +88,25 @@ const AdminServices = () => {
         <DataTable 
           columns={ServiceColumns} 
           data={services}
-          actions={(service) => (
-            <ServiceActions 
-              service={service as Service} 
-              onEdit={handleEditService} 
-              onDelete={handleDeleteService} 
-            />
-          )}
+          actions={renderActions}
         />
         
-        <AddServiceDialog
-          open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onAddService={handleAddService}
-        />
+        {isAddDialogOpen && (
+          <AddServiceDialog
+            open={isAddDialogOpen}
+            onOpenChange={setIsAddDialogOpen}
+            onAddService={handleAddService}
+          />
+        )}
         
-        <EditServiceDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onSave={handleSaveService}
-          service={selectedService}
-        />
+        {isEditDialogOpen && selectedService && (
+          <EditServiceDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onSave={handleSaveService}
+            service={selectedService}
+          />
+        )}
       </div>
     </AppLayout>
   );
